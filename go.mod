@@ -1,6 +1,6 @@
 module github.com/CloudStriver/platform-comment
 
-go 1.21.0
+go 1.20
 
 require (
 	github.com/CloudStriver/cloudmind-content v0.0.0-20240123023815-46c6b9fd0d47
