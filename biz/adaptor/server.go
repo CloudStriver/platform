@@ -24,7 +24,9 @@ func (c *CommentServerImpl) GetCommentList(ctx context.Context, req *comment.Get
 }
 
 func (c *CommentServerImpl) CreateComment(ctx context.Context, req *comment.CreateCommentReq) (res *comment.CreateCommentResp, err error) {
-	res, err = c.CommentService.CreateComment(ctx, req)
+	if res, err = c.CommentService.CreateComment(ctx, req); err != nil {
+		return res, err
+	}
 	_ = mr.Finish(func() error {
 		c.CommentService.UpdateAfterCreateComment(ctx, req.Comment)
 		return nil
