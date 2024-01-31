@@ -12,6 +12,7 @@ import (
 type CommentServerImpl struct {
 	*config.Config
 	CommentService service.ICommentService
+	LabelService   service.ILabelService
 	SubjectService service.ISubjectService
 }
 
@@ -35,10 +36,6 @@ func (c *CommentServerImpl) CreateComment(ctx context.Context, req *comment.Crea
 		return nil
 	})
 	return res, nil
-}
-
-func (c *CommentServerImpl) CreateAfter(data *comment.Comment) {
-
 }
 
 func (c *CommentServerImpl) UpdateComment(ctx context.Context, req *comment.UpdateCommentReq) (res *comment.UpdateCommentResp, err error) {
@@ -87,4 +84,44 @@ func (c *CommentServerImpl) SetCommentSubjectState(ctx context.Context, req *com
 
 func (c *CommentServerImpl) SetCommentSubjectAttrs(ctx context.Context, req *comment.SetCommentSubjectAttrsReq) (res *comment.SetCommentSubjectAttrsResp, err error) {
 	return c.SubjectService.SetCommentSubjectAttrs(ctx, req)
+}
+
+func (c *CommentServerImpl) CreateLabel(ctx context.Context, req *comment.CreateLabelReq) (res *comment.CreateLabelResp, err error) {
+	return c.LabelService.CreateLabel(ctx, req)
+}
+
+func (c *CommentServerImpl) DeleteLabel(ctx context.Context, req *comment.DeleteLabelReq) (res *comment.DeleteLabelResp, err error) {
+	return c.LabelService.DeleteLabel(ctx, req)
+}
+
+func (c *CommentServerImpl) GetLabel(ctx context.Context, req *comment.GetLabelReq) (res *comment.GetLabelResp, err error) {
+	return c.LabelService.GetLabel(ctx, req)
+}
+
+func (c *CommentServerImpl) GetLabels(ctx context.Context, req *comment.GetLabelsReq) (res *comment.GetLabelsResp, err error) {
+	return c.LabelService.GetLabels(ctx, req)
+}
+
+func (c *CommentServerImpl) GetLabelsInBatch(ctx context.Context, req *comment.GetLabelsInBatchReq) (res *comment.GetLabelsInBatchResp, err error) {
+	return c.LabelService.GetLabelsInBatch(ctx, req)
+}
+
+func (c *CommentServerImpl) UpdateLabel(ctx context.Context, req *comment.UpdateLabelReq) (res *comment.UpdateLabelResp, err error) {
+	return c.LabelService.UpdateLabel(ctx, req)
+}
+
+func (c *CommentServerImpl) CreateObject(ctx context.Context, req *comment.CreateObjectReq) (res *comment.CreateObjectResp, err error) {
+	return c.LabelService.CreateObject(ctx, req)
+}
+
+func (c *CommentServerImpl) DeleteObject(ctx context.Context, req *comment.DeleteObjectReq) (res *comment.DeleteObjectResp, err error) {
+	return c.LabelService.DeleteObject(ctx, req)
+}
+
+func (c *CommentServerImpl) GetObjects(ctx context.Context, req *comment.GetObjectsReq) (res *comment.GetObjectsResp, err error) {
+	return c.LabelService.GetObjects(ctx, req)
+}
+
+func (c *CommentServerImpl) UpdateObject(ctx context.Context, req *comment.UpdateObjectReq) (res *comment.UpdateObjectResp, err error) {
+	return c.LabelService.UpdateObject(ctx, req)
 }

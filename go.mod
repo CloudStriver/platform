@@ -5,10 +5,13 @@ go 1.20
 require (
 	github.com/CloudStriver/cloudmind-content v0.0.0-20240123023815-46c6b9fd0d47
 	github.com/CloudStriver/go-pkg v0.0.0-20231229114943-910edcb8788d
-	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240127121217-46359b175a56
+	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240131090738-6cb06aa0c474
+	github.com/bytedance/sonic v1.10.2
 	github.com/cloudwego/kitex v0.8.0
+	github.com/elastic/go-elasticsearch/v8 v8.11.1
 	github.com/google/wire v0.5.0
 	github.com/kitex-contrib/obs-opentelemetry v0.2.5
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/samber/lo v1.38.1
 	github.com/zeromicro/go-zero v1.6.1
 	go.mongodb.org/mongo-driver v1.13.1
@@ -22,7 +25,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.7.1 // indirect
 	github.com/bytedance/gopkg v0.0.0-20231219111115-a5eedbe96960 // indirect
-	github.com/bytedance/sonic v1.10.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
@@ -38,6 +40,7 @@ require (
 	github.com/cloudwego/thriftgo v0.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.3.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect

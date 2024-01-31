@@ -2,10 +2,14 @@ package convertor
 
 import (
 	"github.com/CloudStriver/go-pkg/utils/pagination"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/comment"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/labelEntity"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/basic"
 	gencomment "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -134,4 +138,49 @@ func ParsePagination(opts *basic.PaginationOptions) (p *pagination.PaginationOpt
 		}
 	}
 	return
+}
+
+func LabelMapperToLabel(data *label.Label) *gencomment.Label {
+	return &gencomment.Label{
+		LabelId: data.ID.Hex(),
+		Value:   data.Value,
+	}
+}
+
+func LabelToLabelMapper(data *gencomment.Label) *label.Label {
+	oid, _ := primitive.ObjectIDFromHex(data.LabelId)
+	return &label.Label{
+		ID:    oid,
+		Value: data.Value,
+	}
+}
+
+func LabelEntityToLabelEntityMapper(data *gencomment.LabelEntity) *labelEntity.LabelEntity {
+	oid, _ := primitive.ObjectIDFromHex(data.ObjectId)
+	return &labelEntity.LabelEntity{
+		ID:         oid,
+		UserId:     data.UserId,
+		ObjectType: data.ObjectType,
+		Labels:     data.Labels,
+	}
+}
+
+func LabelEntityFilterOptionsToFilterOptions(data *gencomment.ObjectFilterOptions) *labelEntity.FilterOptions {
+	if data == nil {
+		return &labelEntity.FilterOptions{}
+	} else {
+		return &labelEntity.FilterOptions{
+			OnlyLabelId:    data.OnlyLabelId,
+			OnlyObjectType: data.OnlyObjectType,
+		}
+	}
+}
+
+func ConvertLabelAllFieldsSearchQuery(data string) []types.Query {
+	return []types.Query{{
+		MultiMatch: &types.MultiMatchQuery{
+			Query:  data,
+			Fields: []string{consts.Value + "^3", consts.ID},
+		}},
+	}
 }
