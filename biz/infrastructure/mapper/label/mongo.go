@@ -27,7 +27,7 @@ type (
 	IMongoMapper interface {
 		Insert(ctx context.Context, data *Label) (string, error)
 		FindOne(ctx context.Context, id string) (*Label, error)
-		FindManyByIds(ctx context.Context, ids []string) ([]*Label, error)
+		FindManyNotPagination(ctx context.Context, ids []string) ([]*Label, error)
 		Update(ctx context.Context, data *Label) (*mongo.UpdateResult, error)
 		Delete(ctx context.Context, id string) (int64, error)
 		GetConn() *monc.Model
@@ -108,9 +108,9 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Label, error) {
 	return &data, nil
 }
 
-func (m *MongoMapper) FindManyByIds(ctx context.Context, ids []string) ([]*Label, error) {
+func (m *MongoMapper) FindManyNotPagination(ctx context.Context, ids []string) ([]*Label, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
-	_, span := tracer.Start(ctx, "mongo.FindManyByIds", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	_, span := tracer.Start(ctx, "mongo.FindManyNotPagination", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
 	var data []*Label
@@ -125,8 +125,9 @@ func (m *MongoMapper) FindManyByIds(ctx context.Context, ids []string) ([]*Label
 	if err := m.conn.Find(ctx, &data, filter); err != nil {
 		if errorx.Is(err, monc.ErrNotFound) {
 			return nil, consts.ErrNotFound
+		} else {
+			return nil, err
 		}
-		return nil, err
 	}
 	return data, nil
 }

@@ -21,7 +21,6 @@ type ILabelService interface {
 	UpdateLabel(ctx context.Context, req *gencomment.UpdateLabelReq) (resp *gencomment.UpdateLabelResp, err error)
 	GetLabels(ctx context.Context, req *gencomment.GetLabelsReq) (resp *gencomment.GetLabelsResp, err error)
 	CreateObject(ctx context.Context, req *gencomment.CreateObjectReq) (resp *gencomment.CreateObjectResp, err error)
-	CreateObjects(ctx context.Context, req *gencomment.CreateObjectsReq) (resp *gencomment.CreateObjectsResp, err error)
 	DeleteObject(ctx context.Context, req *gencomment.DeleteObjectReq) (resp *gencomment.DeleteObjectResp, err error)
 	GetObjects(ctx context.Context, req *gencomment.GetObjectsReq) (resp *gencomment.GetObjectsResp, err error)
 	UpdateObject(ctx context.Context, req *gencomment.UpdateObjectReq) (resp *gencomment.UpdateObjectResp, err error)
@@ -100,7 +99,7 @@ func (s *LabelService) GetLabels(ctx context.Context, req *gencomment.GetLabelsR
 func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *gencomment.GetLabelsInBatchReq) (resp *gencomment.GetLabelsInBatchResp, err error) {
 	resp = new(gencomment.GetLabelsInBatchResp)
 	var labels []*labelMapper.Label
-	if labels, err = s.LabelMongoMapper.FindManyByIds(ctx, req.LabelIds); err != nil {
+	if labels, err = s.LabelMongoMapper.FindManyNotPagination(ctx, req.LabelIds); err != nil {
 		log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 		return resp, err
 	}
@@ -139,12 +138,13 @@ func (s *LabelService) CreateObjects(ctx context.Context, req *gencomment.Create
 		log.CtxError(ctx, "批量创建标签实体集 失败[%v]\n", err)
 		return resp, err
 	}
+	resp.Id = id
 	return resp, nil
 }
 
 func (s *LabelService) DeleteObject(ctx context.Context, req *gencomment.DeleteObjectReq) (resp *gencomment.DeleteObjectResp, err error) {
 	resp = new(gencomment.DeleteObjectResp)
-	if _, err = s.EntityMongoMapper.Delete(ctx, req.ObjectId); err != nil {
+	if _, err = s.EntityMongoMapper.Delete(ctx, req.ObjectId, req.UserId); err != nil {
 		log.CtxError(ctx, "删除标签实体 失败[%v]\n", err)
 		return resp, err
 	}
