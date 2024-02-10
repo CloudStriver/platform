@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/convertor"
 	commentMapper "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/comment"
 	subjectMapper "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
@@ -40,8 +41,7 @@ var CommentSet = wire.NewSet(
 func (s *CommentService) GetComment(ctx context.Context, req *gencomment.GetCommentReq) (resp *gencomment.GetCommentResp, err error) {
 	resp = new(gencomment.GetCommentResp)
 	var data *commentMapper.Comment
-	filter := convertor.CommentFilterOptionsToFilterOptions(req.FilterOptions)
-	if data, err = s.CommentMongoMapper.FindOne(ctx, filter); err != nil {
+	if data, err = s.CommentMongoMapper.FindOne(ctx, req.CommentId); err != nil {
 		log.CtxError(ctx, "获取评论详情 失败[%v]\n", err)
 		return resp, err
 	}
@@ -129,7 +129,7 @@ func (s *CommentService) SetCommentState(ctx context.Context, req *gencomment.Se
 
 func (s *CommentService) SetCommentAttrs(ctx context.Context, req *gencomment.SetCommentAttrsReq, res *gencomment.GetCommentSubjectResp) (resp *gencomment.SetCommentAttrsResp, err error) {
 	resp = new(gencomment.SetCommentAttrsResp)
-	if req.Attrs == gencomment.Attrs_Pinned || req.Attrs == gencomment.Attrs_PinnedAndHighlighted {
+	if req.Attrs == consts.Pinned || req.Attrs == consts.PinnedAndHighlighted {
 		req.SortTime = math.MaxInt64 - 1
 	}
 	tx := s.SubjectMongoMapper.StartClient()
@@ -138,7 +138,7 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *gencomment.Se
 			if err = sessionContext.StartTransaction(); err != nil {
 				return err
 			}
-			if req.Attrs == gencomment.Attrs_Pinned || req.Attrs == gencomment.Attrs_PinnedAndHighlighted {
+			if req.Attrs == consts.Pinned || req.Attrs == consts.PinnedAndHighlighted {
 				oid, _ := primitive.ObjectIDFromHex(req.SubjectId)
 				if _, err = s.SubjectMongoMapper.Update(sessionContext, &subjectMapper.Subject{ID: oid, UserId: req.UserId, TopCommentId: lo.ToPtr(req.Id)}); err != nil {
 					if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
@@ -166,7 +166,7 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *gencomment.Se
 			if err = sessionContext.StartTransaction(); err != nil {
 				return err
 			}
-			if req.Attrs == gencomment.Attrs_None {
+			if req.Attrs == consts.None {
 				oid, _ := primitive.ObjectIDFromHex(req.SubjectId)
 				if _, err = s.SubjectMongoMapper.Update(sessionContext, &subjectMapper.Subject{ID: oid, UserId: req.UserId, TopCommentId: lo.ToPtr("")}); err != nil {
 					if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
@@ -195,10 +195,10 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *gencomment.Se
 			if err = sessionContext.StartTransaction(); err != nil {
 				return err
 			}
-			if req.Attrs == gencomment.Attrs_Pinned || req.Attrs == gencomment.Attrs_PinnedAndHighlighted || req.Attrs == gencomment.Attrs_None {
+			if req.Attrs == consts.Pinned || req.Attrs == consts.PinnedAndHighlighted || req.Attrs == consts.None {
 				oid, _ := primitive.ObjectIDFromHex(req.SubjectId)
 				var data *subjectMapper.Subject
-				if req.Attrs == gencomment.Attrs_Pinned || req.Attrs == gencomment.Attrs_PinnedAndHighlighted {
+				if req.Attrs == consts.Pinned || req.Attrs == consts.PinnedAndHighlighted {
 					data = &subjectMapper.Subject{ID: oid, UserId: req.UserId, TopCommentId: lo.ToPtr(req.Id)}
 				} else {
 					data = &subjectMapper.Subject{ID: oid, UserId: req.UserId, TopCommentId: lo.ToPtr("")}

@@ -27,7 +27,7 @@ var _ IMongoMapper = (*MongoMapper)(nil)
 type (
 	IMongoMapper interface {
 		Insert(ctx context.Context, data *Comment) (string, error)
-		FindOne(ctx context.Context, fopts *FilterOptions) (*Comment, error)
+		FindOne(ctx context.Context, id string) (*Comment, error)
 		Update(ctx context.Context, data *Comment) (*mongo.UpdateResult, error)
 		UpdateAfterCreateComment(ctx context.Context, data *Comment)
 		Delete(ctx context.Context, id string) (int64, error)
@@ -88,22 +88,18 @@ func (m *MongoMapper) Insert(ctx context.Context, data *Comment) (string, error)
 	return ID.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-func (m *MongoMapper) FindOne(ctx context.Context, fopts *FilterOptions) (*Comment, error) {
+func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Comment, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.FindOne", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
 	var data Comment
-	if fopts.OnlyCommentId != nil {
-		_, err := primitive.ObjectIDFromHex(*fopts.OnlyCommentId)
-		if err != nil {
-			return nil, consts.ErrInvalidId
-		}
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, consts.ErrInvalidId
 	}
-
-	filter := makeMongoFilter(fopts)
-	key := prefixCommentCacheKey + *fopts.OnlyCommentId
-	if err := m.conn.FindOne(ctx, key, &data, filter); err != nil {
+	key := prefixCommentCacheKey + id
+	if err = m.conn.FindOne(ctx, key, &data, bson.M{consts.ID: oid}); err != nil {
 		if errorx.Is(err, monc.ErrNotFound) {
 			return nil, consts.ErrNotFound
 		} else {
