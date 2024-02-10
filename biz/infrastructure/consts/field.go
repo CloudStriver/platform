@@ -22,3 +22,13 @@ const (
 	Labels     = "labels"
 	ObjectType = "objectType"
 )
+
+const (
+	UnknownState         int64 = 0
+	None                 int64 = 1 // 无
+	Pinned               int64 = 2 // 置顶
+	Highlighted          int64 = 3 // 精华
+	PinnedAndHighlighted int64 = 4 //  置顶+精华
+	Normal               int64 = 1
+	Deleted              int64 = 2
+)
