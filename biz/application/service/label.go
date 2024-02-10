@@ -87,7 +87,6 @@ func (s *LabelService) GetLabels(ctx context.Context, req *gencomment.GetLabelsR
 		log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 		return resp, err
 	}
-
 	if p.LastToken != nil {
 		resp.Token = *p.LastToken
 	}
@@ -137,7 +136,7 @@ func (s *LabelService) CreateObjects(ctx context.Context, req *gencomment.Create
 		return convertor.LabelEntityToLabelEntityMapper(item)
 	})
 	if err = s.EntityMongoMapper.InsertMany(ctx, data); err != nil {
-		log.CtxError(ctx, "创建标签实体 失败[%v]\n", err)
+		log.CtxError(ctx, "批量创建标签实体 失败[%v]\n", err)
 		return resp, err
 	}
 	return resp, nil
@@ -155,7 +154,6 @@ func (s *LabelService) GetObjects(ctx context.Context, req *gencomment.GetObject
 	resp = new(gencomment.GetObjectsResp)
 	var total int64
 	var objects []*entityMapper.LabelEntity
-
 	p := convertor.ParsePagination(req.Pagination)
 	filter := convertor.LabelEntityFilterOptionsToFilterOptions(req.FilterOptions)
 	if objects, total, err = s.EntityMongoMapper.FindManyAndCount(ctx, filter, p, mongop.IdCursorType); err != nil {
