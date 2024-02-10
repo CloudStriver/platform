@@ -7,6 +7,7 @@ import (
 	"github.com/CloudStriver/go-pkg/utils/pagination/mongop"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
+	"github.com/samber/lo"
 	"github.com/zeromicro/go-zero/core/mr"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"github.com/zeromicro/go-zero/core/trace"
@@ -26,20 +27,20 @@ var _ IMongoMapper = (*MongoMapper)(nil)
 
 type (
 	IMongoMapper interface {
-		Insert(ctx context.Context, data *LabelEntity) (string, error)
+		Insert(ctx context.Context, data *LabelEntity) error
+		InsertMany(ctx context.Context, data []*LabelEntity) error
 		FindOne(ctx context.Context, id string) (*LabelEntity, error)
 		Count(ctx context.Context, filter *FilterOptions) (int64, error)
 		FindMany(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*LabelEntity, error)
 		FindManyAndCount(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*LabelEntity, int64, error)
 		Update(ctx context.Context, data *LabelEntity) (*mongo.UpdateResult, error)
-		Delete(ctx context.Context, id, userId string) (int64, error)
+		Delete(ctx context.Context, id string) (int64, error)
 		GetConn() *monc.Model
 		StartClient() *mongo.Client
 	}
 
 	LabelEntity struct {
 		ID         primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-		UserId     string             `bson:"userId,omitempty" json:"userId,omitempty"`
 		ObjectType int64              `bson:"objectType,omitempty" json:"objectType,omitempty"`
 		Labels     []string           `bson:"labels,omitempty" json:"labels,omitempty"`
 		CreateAt   time.Time          `bson:"createAt,omitempty" json:"createAt,omitempty"`
@@ -59,23 +60,31 @@ func NewMongoMapper(config *config.Config) IMongoMapper {
 	}
 }
 
-func (m *MongoMapper) Insert(ctx context.Context, data *LabelEntity) (string, error) {
+func (m *MongoMapper) Insert(ctx context.Context, data *LabelEntity) error {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.Insert", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
-	if data.ID.IsZero() {
-		data.ID = primitive.NewObjectID()
-	}
-
 	data.CreateAt = time.Now()
 	data.UpdateAt = time.Now()
 	key := prefixCommentCacheKey + data.ID.Hex()
-	ID, err := m.conn.InsertOne(ctx, key, data)
-	if err != nil {
-		return "", err
+	_, err := m.conn.InsertOne(ctx, key, data)
+	return err
+}
+
+func (m *MongoMapper) InsertMany(ctx context.Context, data []*LabelEntity) error {
+	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
+	_, span := tracer.Start(ctx, "mongo.InsertMany", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	defer span.End()
+
+	for i := range data {
+		data[i].CreateAt = time.Now()
+		data[i].UpdateAt = time.Now()
 	}
-	return ID.InsertedID.(primitive.ObjectID).Hex(), nil
+
+	dataAny := lo.Map(data, func(item *LabelEntity, _ int) any { return item })
+	_, err := m.conn.InsertMany(ctx, dataAny)
+	return err
 }
 
 func (m *MongoMapper) FindOne(ctx context.Context, id string) (*LabelEntity, error) {
@@ -107,11 +116,11 @@ func (m *MongoMapper) Update(ctx context.Context, data *LabelEntity) (*mongo.Upd
 
 	data.UpdateAt = time.Now()
 	key := prefixCommentCacheKey + data.ID.Hex()
-	res, err := m.conn.UpdateOne(ctx, key, bson.M{consts.ID: data.ID, consts.UserId: data.UserId}, bson.M{"$set": data})
+	res, err := m.conn.UpdateOne(ctx, key, bson.M{consts.ID: data.ID}, bson.M{"$set": data})
 	return res, err
 }
 
-func (m *MongoMapper) Delete(ctx context.Context, id, userId string) (int64, error) {
+func (m *MongoMapper) Delete(ctx context.Context, id string) (int64, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.Delete", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
@@ -121,7 +130,7 @@ func (m *MongoMapper) Delete(ctx context.Context, id, userId string) (int64, err
 		return 0, consts.ErrInvalidId
 	}
 	key := prefixCommentCacheKey + id
-	resp, err := m.conn.DeleteOne(ctx, key, bson.M{consts.ID: oid, consts.UserId: userId})
+	resp, err := m.conn.DeleteOne(ctx, key, bson.M{consts.ID: oid})
 	return resp, err
 }
 

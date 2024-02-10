@@ -114,6 +114,10 @@ func (c *CommentServerImpl) CreateObject(ctx context.Context, req *comment.Creat
 	return c.LabelService.CreateObject(ctx, req)
 }
 
+func (c *CommentServerImpl) CreateObjects(ctx context.Context, req *comment.CreateObjectsReq) (res *comment.CreateObjectsResp, err error) {
+	return c.LabelService.CreateObjects(ctx, req)
+}
+
 func (c *CommentServerImpl) DeleteObject(ctx context.Context, req *comment.DeleteObjectReq) (res *comment.DeleteObjectResp, err error) {
 	return c.LabelService.DeleteObject(ctx, req)
 }
