@@ -136,7 +136,7 @@ func (s *LabelService) CreateObjects(ctx context.Context, req *gencomment.Create
 		return convertor.LabelEntityToLabelEntityMapper(item)
 	})
 	if err = s.EntityMongoMapper.InsertMany(ctx, data); err != nil {
-		log.CtxError(ctx, "批量创建标签实体 失败[%v]\n", err)
+		log.CtxError(ctx, "批量创建标签实体集 失败[%v]\n", err)
 		return resp, err
 	}
 	return resp, nil
