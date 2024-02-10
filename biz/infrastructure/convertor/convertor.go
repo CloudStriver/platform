@@ -159,6 +159,7 @@ func LabelEntityToLabelEntityMapper(data *gencomment.LabelEntity) *labelEntity.L
 	oid, _ := primitive.ObjectIDFromHex(data.ObjectId)
 	return &labelEntity.LabelEntity{
 		ID:         oid,
+		UserId:     data.UserId,
 		ObjectType: data.ObjectType,
 		Labels:     data.Labels,
 	}
