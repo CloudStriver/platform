@@ -5,7 +5,6 @@ import (
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/comment"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/labelEntity"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/basic"
 	gencomment "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
@@ -14,19 +13,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CheckId(id string) primitive.ObjectID {
-	var oid primitive.ObjectID
-	if id == "" {
-		oid = primitive.NilObjectID
-	} else {
-		oid, _ = primitive.ObjectIDFromHex(id)
-	}
-	return oid
-}
-
 func CommentToCommentMapper(data *gencomment.Comment) *comment.Comment {
+	oid, _ := primitive.ObjectIDFromHex(data.Id)
 	return &comment.Comment{
-		ID:        CheckId(data.Id),
+		ID:        oid,
 		UserId:    data.UserId,
 		AtUserId:  data.AtUserId,
 		SubjectId: data.SubjectId,
@@ -36,8 +26,8 @@ func CommentToCommentMapper(data *gencomment.Comment) *comment.Comment {
 		Meta:      data.Meta,
 		Tags:      data.Tags,
 		Count:     data.Count,
-		State:     int64(data.State),
-		Attrs:     int64(data.Attrs),
+		State:     data.State,
+		Attrs:     data.Attrs,
 		SortTime:  data.CreateTime,
 	}
 }
@@ -77,24 +67,10 @@ func CommentFilterOptionsToFilterOptions(data *gencomment.CommentFilterOptions) 
 	}
 }
 
-func SubjectFilterOptionsToFilterOptions(data *gencomment.SubjectFilterOptions) *subject.FilterOptions {
-	if data == nil {
-		return &subject.FilterOptions{}
-	} else {
-		return &subject.FilterOptions{
-			OnlyUserId:    data.OnlyUserId,
-			OnlyItemId:    data.OnlyItemId,
-			OnlySubjectId: data.OnlySubjectId,
-			OnlyState:     data.OnlyState,
-			OnlyAttrs:     data.OnlyAttrs,
-		}
-	}
-}
-
 func SubjectToSubjectMapper(data *gencomment.Subject) *subject.Subject {
+	oid, _ := primitive.ObjectIDFromHex(data.Id)
 	return &subject.Subject{
-		ID:           CheckId(data.Id),
-		ItemId:       data.ItemId,
+		ID:           oid,
 		UserId:       data.UserId,
 		TopCommentId: lo.ToPtr(data.TopCommentId),
 		RootCount:    data.RootCount,
@@ -107,7 +83,6 @@ func SubjectToSubjectMapper(data *gencomment.Subject) *subject.Subject {
 func SubjectMapperToSubjectInfo(data *subject.Subject) *gencomment.SubjectInfo {
 	return &gencomment.SubjectInfo{
 		Id:     data.ID.Hex(),
-		ItemId: data.ItemId,
 		UserId: data.UserId,
 		Attrs:  data.Attrs,
 	}
@@ -116,7 +91,6 @@ func SubjectMapperToSubjectInfo(data *subject.Subject) *gencomment.SubjectInfo {
 func SubjectMapperToSubjectDetail(data *subject.Subject) *gencomment.SubjectDetails {
 	return &gencomment.SubjectDetails{
 		Id:           data.ID.Hex(),
-		ItemId:       data.ItemId,
 		UserId:       data.UserId,
 		TopCommentId: *data.TopCommentId,
 		RootCount:    *data.RootCount,
@@ -152,26 +126,6 @@ func LabelToLabelMapper(data *gencomment.Label) *label.Label {
 	return &label.Label{
 		ID:    oid,
 		Value: data.Value,
-	}
-}
-
-func LabelEntityToLabelEntityMapper(data *gencomment.LabelEntity) *labelEntity.LabelEntity {
-	oid, _ := primitive.ObjectIDFromHex(data.ObjectId)
-	return &labelEntity.LabelEntity{
-		ID:         oid,
-		ObjectType: data.ObjectType,
-		Labels:     data.Labels,
-	}
-}
-
-func LabelEntityFilterOptionsToFilterOptions(data *gencomment.ObjectFilterOptions) *labelEntity.FilterOptions {
-	if data == nil {
-		return &labelEntity.FilterOptions{}
-	} else {
-		return &labelEntity.FilterOptions{
-			OnlyLabelId:    data.OnlyLabelId,
-			OnlyObjectType: data.OnlyObjectType,
-		}
 	}
 }
 
