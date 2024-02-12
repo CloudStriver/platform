@@ -5,7 +5,6 @@ import (
 	"github.com/CloudStriver/platform-comment/biz/application/service"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
-	"github.com/samber/lo"
 	"github.com/zeromicro/go-zero/core/mr"
 )
 
@@ -56,7 +55,7 @@ func (c *CommentServerImpl) SetCommentState(ctx context.Context, req *comment.Se
 
 func (c *CommentServerImpl) SetCommentAttrs(ctx context.Context, req *comment.SetCommentAttrsReq) (res *comment.SetCommentAttrsResp, err error) {
 	var resp *comment.GetCommentSubjectResp
-	if resp, err = c.SubjectService.GetCommentSubject(ctx, &comment.GetCommentSubjectReq{FilterOptions: &comment.SubjectFilterOptions{OnlySubjectId: lo.ToPtr(req.SubjectId), OnlyUserId: lo.ToPtr(req.UserId)}}); err != nil {
+	if resp, err = c.SubjectService.GetCommentSubject(ctx, &comment.GetCommentSubjectReq{Id: req.SubjectId}); err != nil {
 		return res, err
 	}
 	return c.CommentService.SetCommentAttrs(ctx, req, resp)
@@ -76,14 +75,6 @@ func (c *CommentServerImpl) UpdateCommentSubject(ctx context.Context, req *comme
 
 func (c *CommentServerImpl) DeleteCommentSubject(ctx context.Context, req *comment.DeleteCommentSubjectReq) (res *comment.DeleteCommentSubjectResp, err error) {
 	return c.SubjectService.DeleteCommentSubject(ctx, req)
-}
-
-func (c *CommentServerImpl) SetCommentSubjectState(ctx context.Context, req *comment.SetCommentSubjectStateReq) (res *comment.SetCommentSubjectStateResp, err error) {
-	return c.SubjectService.SetCommentSubjectState(ctx, req)
-}
-
-func (c *CommentServerImpl) SetCommentSubjectAttrs(ctx context.Context, req *comment.SetCommentSubjectAttrsReq) (res *comment.SetCommentSubjectAttrsResp, err error) {
-	return c.SubjectService.SetCommentSubjectAttrs(ctx, req)
 }
 
 func (c *CommentServerImpl) CreateLabel(ctx context.Context, req *comment.CreateLabelReq) (res *comment.CreateLabelResp, err error) {
@@ -108,24 +99,4 @@ func (c *CommentServerImpl) GetLabelsInBatch(ctx context.Context, req *comment.G
 
 func (c *CommentServerImpl) UpdateLabel(ctx context.Context, req *comment.UpdateLabelReq) (res *comment.UpdateLabelResp, err error) {
 	return c.LabelService.UpdateLabel(ctx, req)
-}
-
-func (c *CommentServerImpl) CreateObject(ctx context.Context, req *comment.CreateObjectReq) (res *comment.CreateObjectResp, err error) {
-	return c.LabelService.CreateObject(ctx, req)
-}
-
-func (c *CommentServerImpl) CreateObjects(ctx context.Context, req *comment.CreateObjectsReq) (res *comment.CreateObjectsResp, err error) {
-	return c.LabelService.CreateObjects(ctx, req)
-}
-
-func (c *CommentServerImpl) DeleteObject(ctx context.Context, req *comment.DeleteObjectReq) (res *comment.DeleteObjectResp, err error) {
-	return c.LabelService.DeleteObject(ctx, req)
-}
-
-func (c *CommentServerImpl) GetObjects(ctx context.Context, req *comment.GetObjectsReq) (res *comment.GetObjectsResp, err error) {
-	return c.LabelService.GetObjects(ctx, req)
-}
-
-func (c *CommentServerImpl) UpdateObject(ctx context.Context, req *comment.UpdateObjectReq) (res *comment.UpdateObjectResp, err error) {
-	return c.LabelService.UpdateObject(ctx, req)
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
 	commentModel "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/comment"
 	labelModel "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
-	entityModel "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/labelEntity"
 	subjectModel "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/stores/redis"
 	"github.com/google/wire"
@@ -33,5 +32,4 @@ var MapperSet = wire.NewSet(
 	subjectModel.NewMongoMapper,
 	labelModel.NewMongoMapper,
 	labelModel.NewEsMapper,
-	entityModel.NewMongoMapper,
 )

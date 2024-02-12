@@ -12,7 +12,6 @@ import (
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/comment"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/labelEntity"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
 )
 
@@ -31,11 +30,9 @@ func NewCommentServerImpl() (*adaptor.CommentServerImpl, error) {
 	}
 	iEsMapper := label.NewEsMapper(configConfig)
 	labelIMongoMapper := label.NewMongoMapper(configConfig)
-	labelEntityIMongoMapper := labelEntity.NewMongoMapper(configConfig)
 	labelService := &service.LabelService{
-		LabelEsMapper:     iEsMapper,
-		LabelMongoMapper:  labelIMongoMapper,
-		EntityMongoMapper: labelEntityIMongoMapper,
+		LabelEsMapper:    iEsMapper,
+		LabelMongoMapper: labelIMongoMapper,
 	}
 	subjectService := &service.SubjectService{
 		SubjectMongoMapper: subjectIMongoMapper,

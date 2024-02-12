@@ -23,7 +23,7 @@ var _ IMongoMapper = (*MongoMapper)(nil)
 type (
 	IMongoMapper interface {
 		Insert(ctx context.Context, data *Subject) (string, error)
-		FindOne(ctx context.Context, fopts *FilterOptions) (*Subject, error)
+		FindOne(ctx context.Context, id string) (*Subject, error)
 		Update(ctx context.Context, data *Subject) (*mongo.UpdateResult, error)
 		UpdateAfterCreateComment(ctx context.Context, data *Subject)
 		Delete(ctx context.Context, id, userId string) (int64, error)
@@ -33,7 +33,6 @@ type (
 
 	Subject struct {
 		ID           primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-		ItemId       string             `bson:"itemId,omitempty" json:"itemId,omitempty"`
 		UserId       string             `bson:"userId,omitempty" json:"userId,omitempty"`
 		TopCommentId *string            `bson:"topCommentId,omitempty" json:"topCommentId,omitempty"`
 		RootCount    *int64             `bson:"rootCount,omitempty" json:"rootCount,omitempty"`
@@ -75,29 +74,27 @@ func (m *MongoMapper) Insert(ctx context.Context, data *Subject) (string, error)
 	return ID.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-func (m *MongoMapper) FindOne(ctx context.Context, fopts *FilterOptions) (*Subject, error) {
+func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Subject, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.FindOne", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
-	var data Subject
-	if fopts.OnlySubjectId != nil {
-		_, err := primitive.ObjectIDFromHex(*fopts.OnlySubjectId)
-		if err != nil {
-			return nil, consts.ErrInvalidId
-		}
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, consts.ErrInvalidId
 	}
 
-	filter := makeMongoFilter(fopts)
-	key := prefixSubjectCacheKey + *fopts.OnlySubjectId
-	if err := m.conn.FindOne(ctx, key, &data, filter); err != nil {
-		if errorx.Is(err, monc.ErrNotFound) {
-			return nil, consts.ErrNotFound
-		} else {
-			return nil, err
-		}
+	var data Subject
+	key := prefixSubjectCacheKey + id
+	err = m.conn.FindOne(ctx, key, &data, bson.M{consts.ID: oid})
+	switch {
+	case errorx.Is(err, monc.ErrNotFound):
+		return nil, consts.ErrNotFound
+	case err == nil:
+		return &data, nil
+	default:
+		return nil, err
 	}
-	return &data, nil
 }
 
 func (m *MongoMapper) Update(ctx context.Context, data *Subject) (*mongo.UpdateResult, error) {

@@ -3,11 +3,9 @@ package service
 import (
 	"context"
 	"github.com/CloudStriver/go-pkg/utils/pagination/esp"
-	"github.com/CloudStriver/go-pkg/utils/pagination/mongop"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/convertor"
 	labelMapper "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
-	entityMapper "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/labelEntity"
 	gencomment "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
 	"github.com/google/wire"
 	"github.com/samber/lo"
@@ -20,17 +18,11 @@ type ILabelService interface {
 	GetLabelsInBatch(ctx context.Context, req *gencomment.GetLabelsInBatchReq) (resp *gencomment.GetLabelsInBatchResp, err error)
 	UpdateLabel(ctx context.Context, req *gencomment.UpdateLabelReq) (resp *gencomment.UpdateLabelResp, err error)
 	GetLabels(ctx context.Context, req *gencomment.GetLabelsReq) (resp *gencomment.GetLabelsResp, err error)
-	CreateObject(ctx context.Context, req *gencomment.CreateObjectReq) (resp *gencomment.CreateObjectResp, err error)
-	CreateObjects(ctx context.Context, req *gencomment.CreateObjectsReq) (resp *gencomment.CreateObjectsResp, err error)
-	DeleteObject(ctx context.Context, req *gencomment.DeleteObjectReq) (resp *gencomment.DeleteObjectResp, err error)
-	GetObjects(ctx context.Context, req *gencomment.GetObjectsReq) (resp *gencomment.GetObjectsResp, err error)
-	UpdateObject(ctx context.Context, req *gencomment.UpdateObjectReq) (resp *gencomment.UpdateObjectResp, err error)
 }
 
 type LabelService struct {
-	LabelEsMapper     labelMapper.IEsMapper
-	LabelMongoMapper  labelMapper.IMongoMapper
-	EntityMongoMapper entityMapper.IMongoMapper
+	LabelEsMapper    labelMapper.IEsMapper
+	LabelMongoMapper labelMapper.IMongoMapper
 }
 
 var LabelSet = wire.NewSet(
@@ -87,7 +79,6 @@ func (s *LabelService) GetLabels(ctx context.Context, req *gencomment.GetLabelsR
 		log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 		return resp, err
 	}
-
 	if p.LastToken != nil {
 		resp.Token = *p.LastToken
 	}
@@ -119,65 +110,5 @@ func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *gencomment.Get
 		}
 		return nil // 或者处理找不到标签的情况
 	})
-	return resp, nil
-}
-
-func (s *LabelService) CreateObject(ctx context.Context, req *gencomment.CreateObjectReq) (resp *gencomment.CreateObjectResp, err error) {
-	resp = new(gencomment.CreateObjectResp)
-	if err = s.EntityMongoMapper.Insert(ctx, convertor.LabelEntityToLabelEntityMapper(req.Object)); err != nil {
-		log.CtxError(ctx, "创建标签实体 失败[%v]\n", err)
-		return resp, err
-	}
-	return resp, nil
-}
-
-func (s *LabelService) CreateObjects(ctx context.Context, req *gencomment.CreateObjectsReq) (resp *gencomment.CreateObjectsResp, err error) {
-	resp = new(gencomment.CreateObjectsResp)
-	data := lo.Map(req.Objects, func(item *gencomment.LabelEntity, _ int) *entityMapper.LabelEntity {
-		return convertor.LabelEntityToLabelEntityMapper(item)
-	})
-	if err = s.EntityMongoMapper.InsertMany(ctx, data); err != nil {
-		log.CtxError(ctx, "创建标签实体 失败[%v]\n", err)
-		return resp, err
-	}
-	return resp, nil
-}
-
-func (s *LabelService) DeleteObject(ctx context.Context, req *gencomment.DeleteObjectReq) (resp *gencomment.DeleteObjectResp, err error) {
-	resp = new(gencomment.DeleteObjectResp)
-	if _, err = s.EntityMongoMapper.Delete(ctx, req.ObjectId); err != nil {
-		log.CtxError(ctx, "删除标签实体 失败[%v]\n", err)
-		return resp, err
-	}
-	return
-}
-func (s *LabelService) GetObjects(ctx context.Context, req *gencomment.GetObjectsReq) (resp *gencomment.GetObjectsResp, err error) {
-	resp = new(gencomment.GetObjectsResp)
-	var total int64
-	var objects []*entityMapper.LabelEntity
-
-	p := convertor.ParsePagination(req.Pagination)
-	filter := convertor.LabelEntityFilterOptionsToFilterOptions(req.FilterOptions)
-	if objects, total, err = s.EntityMongoMapper.FindManyAndCount(ctx, filter, p, mongop.IdCursorType); err != nil {
-		log.CtxError(ctx, "获取标签实体集 失败[%v]\n", err)
-		return resp, err
-	}
-
-	if p.LastToken != nil {
-		resp.Token = *p.LastToken
-	}
-	resp.ObjectIds = lo.Map(objects, func(item *entityMapper.LabelEntity, _ int) string {
-		return item.ID.Hex()
-	})
-	resp.Total = total
-	return resp, nil
-}
-
-func (s *LabelService) UpdateObject(ctx context.Context, req *gencomment.UpdateObjectReq) (resp *gencomment.UpdateObjectResp, err error) {
-	resp = new(gencomment.UpdateObjectResp)
-	if _, err = s.EntityMongoMapper.Update(ctx, convertor.LabelEntityToLabelEntityMapper(req.Object)); err != nil {
-		log.CtxError(ctx, "更新标签实体 失败[%v]\n", err)
-		return resp, err
-	}
 	return resp, nil
 }

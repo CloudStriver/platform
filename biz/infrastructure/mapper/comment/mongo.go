@@ -99,14 +99,15 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Comment, error) 
 		return nil, consts.ErrInvalidId
 	}
 	key := prefixCommentCacheKey + id
-	if err = m.conn.FindOne(ctx, key, &data, bson.M{consts.ID: oid}); err != nil {
-		if errorx.Is(err, monc.ErrNotFound) {
-			return nil, consts.ErrNotFound
-		} else {
-			return nil, err
-		}
+	err = m.conn.FindOne(ctx, key, &data, bson.M{consts.ID: oid})
+	switch {
+	case errorx.Is(err, monc.ErrNotFound):
+		return nil, consts.ErrNotFound
+	case err == nil:
+		return &data, nil
+	default:
+		return nil, err
 	}
-	return &data, nil
 }
 
 func (m *MongoMapper) Update(ctx context.Context, data *Comment) (*mongo.UpdateResult, error) {
