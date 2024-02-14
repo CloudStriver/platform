@@ -23,7 +23,6 @@ type ICommentService interface {
 	UpdateComment(ctx context.Context, req *gencomment.UpdateCommentReq) (resp *gencomment.UpdateCommentResp, err error)
 	DeleteComment(ctx context.Context, req *gencomment.DeleteCommentReq) (resp *gencomment.DeleteCommentResp, err error)
 	DeleteCommentWithUserId(ctx context.Context, req *gencomment.DeleteCommentWithUserIdReq) (resp *gencomment.DeleteCommentWithUserIdResp, err error)
-	SetCommentState(ctx context.Context, req *gencomment.SetCommentStateReq) (resp *gencomment.SetCommentStateResp, err error)
 	SetCommentAttrs(ctx context.Context, req *gencomment.SetCommentAttrsReq, res *gencomment.GetCommentSubjectResp) (resp *gencomment.SetCommentAttrsResp, err error)
 }
 
@@ -112,15 +111,6 @@ func (s *CommentService) DeleteCommentWithUserId(ctx context.Context, req *genco
 	resp = new(gencomment.DeleteCommentWithUserIdResp)
 	if _, err = s.CommentMongoMapper.DeleteWithUserId(ctx, req.Id, req.UserId); err != nil {
 		log.CtxError(ctx, "删除评论 失败[%v]\n", err)
-		return resp, err
-	}
-	return resp, nil
-}
-func (s *CommentService) SetCommentState(ctx context.Context, req *gencomment.SetCommentStateReq) (resp *gencomment.SetCommentStateResp, err error) {
-	resp = new(gencomment.SetCommentStateResp)
-	data := convertor.CommentToCommentMapper(&gencomment.Comment{Id: req.Id, UserId: req.UserId, State: req.State})
-	if _, err = s.CommentMongoMapper.Update(ctx, data); err != nil {
-		log.CtxError(ctx, "设置评论状态 失败[%v]\n", err)
 		return resp, err
 	}
 	return resp, nil

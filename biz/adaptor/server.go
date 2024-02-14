@@ -49,10 +49,6 @@ func (c *CommentServerImpl) DeleteCommentWithUserId(ctx context.Context, req *co
 	return c.CommentService.DeleteCommentWithUserId(ctx, req)
 }
 
-func (c *CommentServerImpl) SetCommentState(ctx context.Context, req *comment.SetCommentStateReq) (res *comment.SetCommentStateResp, err error) {
-	return c.CommentService.SetCommentState(ctx, req)
-}
-
 func (c *CommentServerImpl) SetCommentAttrs(ctx context.Context, req *comment.SetCommentAttrsReq) (res *comment.SetCommentAttrsResp, err error) {
 	var resp *comment.GetCommentSubjectResp
 	if resp, err = c.SubjectService.GetCommentSubject(ctx, &comment.GetCommentSubjectReq{Id: req.SubjectId}); err != nil {
