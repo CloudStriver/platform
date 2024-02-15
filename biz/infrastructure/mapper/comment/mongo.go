@@ -76,10 +76,9 @@ func (m *MongoMapper) Insert(ctx context.Context, data *Comment) (string, error)
 
 	if data.ID.IsZero() {
 		data.ID = primitive.NewObjectID()
-		data.CreateAt = time.Now()
-		data.SortTime = data.CreateAt.UnixMilli()
 	}
-
+	data.CreateAt = time.Now()
+	data.SortTime = data.CreateAt.UnixMilli()
 	key := prefixCommentCacheKey + data.ID.Hex()
 	ID, err := m.conn.InsertOne(ctx, key, data)
 	if err != nil {
