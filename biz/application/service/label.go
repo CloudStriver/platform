@@ -57,7 +57,7 @@ func (s *LabelService) GetLabel(ctx context.Context, req *gencomment.GetLabelReq
 		log.CtxError(ctx, "获取标签 失败[%v]\n", err)
 		return resp, err
 	}
-	resp.Label = convertor.LabelMapperToLabel(label)
+	resp.Label = label.Value
 	return resp, nil
 }
 
@@ -98,17 +98,17 @@ func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *gencomment.Get
 	}
 
 	// 创建映射：标签ID到标签对象
-	labelMap := make(map[string]*labelMapper.Label)
+	labelMap := make(map[string]string)
 	for _, label := range labels {
-		labelMap[label.ID.Hex()] = label
+		labelMap[label.ID.Hex()] = label.Value
 	}
 
 	// 按req.LabelIds中的ID顺序映射和转换
-	resp.Labels = lo.Map(req.LabelIds, func(id string, _ int) *gencomment.Label {
+	resp.Labels = lo.Map(req.LabelIds, func(id string, _ int) string {
 		if label, ok := labelMap[id]; ok {
-			return convertor.LabelMapperToLabel(label)
+			return label
 		}
-		return nil // 或者处理找不到标签的情况
+		return "" // 或者处理找不到标签的情况
 	})
 	return resp, nil
 }

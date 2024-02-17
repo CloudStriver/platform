@@ -21,3 +21,9 @@ const (
 	Value     = "value"
 	Labels    = "labels"
 )
+
+const (
+	InitNumber = 0
+	Increment  = 1
+	Decrement  = -1
+)

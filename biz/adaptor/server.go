@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/CloudStriver/platform-comment/biz/application/service"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
 	"github.com/zeromicro/go-zero/core/mr"
 )
@@ -28,10 +29,10 @@ func (c *CommentServerImpl) CreateComment(ctx context.Context, req *comment.Crea
 		return res, err
 	}
 	_ = mr.Finish(func() error {
-		c.CommentService.UpdateAfterCreateComment(ctx, req.Comment)
+		c.CommentService.UpdateCount(ctx, req.Comment.RootId, req.Comment.SubjectId, req.Comment.FatherId, consts.Increment)
 		return nil
 	}, func() error {
-		c.SubjectService.UpdateAfterCreateComment(ctx, req.Comment)
+		c.SubjectService.UpdateCount(ctx, req.Comment.RootId, req.Comment.SubjectId, req.Comment.FatherId, consts.Increment)
 		return nil
 	})
 	return res, nil
@@ -42,11 +43,21 @@ func (c *CommentServerImpl) UpdateComment(ctx context.Context, req *comment.Upda
 }
 
 func (c *CommentServerImpl) DeleteComment(ctx context.Context, req *comment.DeleteCommentReq) (res *comment.DeleteCommentResp, err error) {
-	return c.CommentService.DeleteComment(ctx, req)
-}
-
-func (c *CommentServerImpl) DeleteCommentWithUserId(ctx context.Context, req *comment.DeleteCommentWithUserIdReq) (res *comment.DeleteCommentWithUserIdResp, err error) {
-	return c.CommentService.DeleteCommentWithUserId(ctx, req)
+	var data *comment.GetCommentResp
+	if data, err = c.CommentService.GetComment(ctx, &comment.GetCommentReq{CommentId: req.Id}); err != nil {
+		return res, err
+	}
+	if res, err = c.CommentService.DeleteComment(ctx, req); err != nil {
+		return res, err
+	}
+	_ = mr.Finish(func() error {
+		c.CommentService.UpdateCount(ctx, data.Comment.RootId, data.Comment.SubjectId, data.Comment.FatherId, consts.Decrement)
+		return nil
+	}, func() error {
+		c.SubjectService.UpdateCount(ctx, data.Comment.RootId, data.Comment.SubjectId, data.Comment.FatherId, consts.Decrement)
+		return nil
+	})
+	return res, nil
 }
 
 func (c *CommentServerImpl) SetCommentAttrs(ctx context.Context, req *comment.SetCommentAttrsReq) (res *comment.SetCommentAttrsResp, err error) {

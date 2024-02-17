@@ -24,11 +24,11 @@ func CommentToCommentMapper(data *gencomment.Comment) *comment.Comment {
 		FatherId:  data.FatherId,
 		Content:   data.Content,
 		Meta:      data.Meta,
-		Tags:      data.Tags,
+		Labels:    data.Labels,
 		Count:     data.Count,
 		State:     data.State,
 		Attrs:     data.Attrs,
-		SortTime:  data.CreateTime,
+		SortTime:  data.SortTime,
 	}
 }
 
@@ -41,7 +41,7 @@ func CommentMapperToCommentInfo(data *comment.Comment) *gencomment.CommentInfo {
 		Count:      *data.Count,
 		State:      data.State,
 		Attrs:      data.Attrs,
-		Tags:       data.Tags,
+		Labels:     data.Labels,
 		UserId:     data.UserId,
 		AtUserId:   data.AtUserId,
 		Content:    data.Content,
@@ -75,8 +75,8 @@ func SubjectToSubjectMapper(data *gencomment.Subject) *subject.Subject {
 		TopCommentId: lo.ToPtr(data.TopCommentId),
 		RootCount:    data.RootCount,
 		AllCount:     data.AllCount,
-		State:        int64(data.State),
-		Attrs:        int64(data.Attrs),
+		State:        data.State,
+		Attrs:        data.Attrs,
 	}
 }
 
