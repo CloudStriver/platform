@@ -94,7 +94,6 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Label, error) {
 	if err != nil {
 		return nil, consts.ErrInvalidId
 	}
-
 	var data Label
 	key := prefixCommentCacheKey + id
 	err = m.conn.FindOne(ctx, key, &data, bson.M{consts.ID: oid})

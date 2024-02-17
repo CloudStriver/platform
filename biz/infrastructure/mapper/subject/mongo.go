@@ -25,8 +25,8 @@ type (
 		Insert(ctx context.Context, data *Subject) (string, error)
 		FindOne(ctx context.Context, id string) (*Subject, error)
 		Update(ctx context.Context, data *Subject) (*mongo.UpdateResult, error)
-		UpdateAfterCreateComment(ctx context.Context, data *Subject)
-		Delete(ctx context.Context, id, userId string) (int64, error)
+		UpdateCount(ctx context.Context, id string, allCount, rootCount int64)
+		Delete(ctx context.Context, id string) (int64, error)
 		GetConn() *monc.Model
 		StartClient() *mongo.Client
 	}
@@ -82,7 +82,6 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Subject, error) 
 	if err != nil {
 		return nil, consts.ErrInvalidId
 	}
-
 	var data Subject
 	key := prefixSubjectCacheKey + id
 	err = m.conn.FindOne(ctx, key, &data, bson.M{consts.ID: oid})
@@ -100,31 +99,23 @@ func (m *MongoMapper) Update(ctx context.Context, data *Subject) (*mongo.UpdateR
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.Update", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
-
 	data.UpdateAt = time.Now()
 	key := prefixSubjectCacheKey + data.ID.Hex()
-	res, err := m.conn.UpdateOne(ctx, key, bson.M{consts.ID: data.ID, consts.UserId: data.UserId}, bson.M{"$set": data})
+	res, err := m.conn.UpdateOne(ctx, key, bson.M{consts.ID: data.ID}, bson.M{"$set": data})
 	return res, err
 }
 
-func (m *MongoMapper) UpdateAfterCreateComment(ctx context.Context, data *Subject) {
+func (m *MongoMapper) UpdateCount(ctx context.Context, id string, allCount, rootCount int64) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.UpdateAfterCreateComment", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
-	update := bson.M{"$inc": bson.M{}}
-	if data.RootCount != nil {
-		update["$inc"].(bson.M)[consts.RootCount] = *data.RootCount
-	}
-	if data.AllCount != nil {
-		update["$inc"].(bson.M)[consts.AllCount] = *data.AllCount
-	}
-	update["$set"] = bson.M{consts.UpdateAt: time.Now()}
-	key := prefixSubjectCacheKey + data.ID.Hex()
-	_, _ = m.conn.UpdateOne(ctx, key, bson.M{consts.ID: data.ID}, update)
+	oid, _ := primitive.ObjectIDFromHex(id)
+	key := prefixSubjectCacheKey + id
+	_, _ = m.conn.UpdateOne(ctx, key, bson.M{consts.ID: oid}, bson.M{"$inc": bson.M{consts.RootCount: rootCount, consts.AllCount: allCount}, "$set": bson.M{consts.UpdateAt: time.Now()}})
 }
 
-func (m *MongoMapper) Delete(ctx context.Context, id, userId string) (int64, error) {
+func (m *MongoMapper) Delete(ctx context.Context, id string) (int64, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.Delete", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
@@ -134,7 +125,7 @@ func (m *MongoMapper) Delete(ctx context.Context, id, userId string) (int64, err
 		return 0, consts.ErrInvalidId
 	}
 	key := prefixSubjectCacheKey + id
-	resp, err := m.conn.DeleteOne(ctx, key, bson.M{consts.ID: oid, consts.UserId: userId})
+	resp, err := m.conn.DeleteOne(ctx, key, bson.M{consts.ID: oid})
 	return resp, err
 }
 

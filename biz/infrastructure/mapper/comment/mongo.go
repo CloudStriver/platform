@@ -29,9 +29,8 @@ type (
 		Insert(ctx context.Context, data *Comment) (string, error)
 		FindOne(ctx context.Context, id string) (*Comment, error)
 		Update(ctx context.Context, data *Comment) (*mongo.UpdateResult, error)
-		UpdateAfterCreateComment(ctx context.Context, data *Comment)
+		UpdateCount(ctx context.Context, id string, count int64)
 		Delete(ctx context.Context, id string) (int64, error)
-		DeleteWithUserId(ctx context.Context, id, userId string) (int64, error)
 		Count(ctx context.Context, filter *FilterOptions) (int64, error)
 		FindMany(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Comment, error)
 		FindManyAndCount(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Comment, int64, error)
@@ -48,7 +47,7 @@ type (
 		FatherId  string             `bson:"fatherId,omitempty" json:"fatherId,omitempty"`
 		Content   string             `bson:"content,omitempty" json:"content,omitempty"`
 		Meta      string             `bson:"meta,omitempty" json:"meta,omitempty"`
-		Tags      []string           `bson:"tags,omitempty" json:"tags,omitempty"`
+		Labels    []string           `bson:"labels,omitempty" json:"labels,omitempty"`
 		Count     *int64             `bson:"count,omitempty" json:"count,omitempty"`
 		State     int64              `bson:"state,omitempty" json:"state,omitempty"`
 		Attrs     int64              `bson:"attrs,omitempty" json:"attrs,omitempty"`
@@ -92,11 +91,11 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Comment, error) 
 	_, span := tracer.Start(ctx, "mongo.FindOne", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
-	var data Comment
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, consts.ErrInvalidId
 	}
+	var data Comment
 	key := prefixCommentCacheKey + id
 	err = m.conn.FindOne(ctx, key, &data, bson.M{consts.ID: oid})
 	switch {
@@ -115,22 +114,18 @@ func (m *MongoMapper) Update(ctx context.Context, data *Comment) (*mongo.UpdateR
 	defer span.End()
 
 	key := prefixCommentCacheKey + data.ID.Hex()
-	res, err := m.conn.UpdateOne(ctx, key, bson.M{consts.ID: data.ID, consts.UserId: data.UserId}, bson.M{"$set": data})
+	res, err := m.conn.UpdateOne(ctx, key, bson.M{consts.ID: data.ID}, bson.M{"$set": data})
 	return res, err
 }
 
-func (m *MongoMapper) UpdateAfterCreateComment(ctx context.Context, data *Comment) {
+func (m *MongoMapper) UpdateCount(ctx context.Context, id string, count int64) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
-	_, span := tracer.Start(ctx, "mongo.UpdateAfterCreateComment", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	_, span := tracer.Start(ctx, "mongo.UpdateCount", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
-	update := bson.M{"$inc": bson.M{}}
-	if data.Count != nil {
-		update["$inc"].(bson.M)[consts.Count] = *data.Count
-	}
-
-	key := prefixCommentCacheKey + data.ID.Hex()
-	_, _ = m.conn.UpdateOne(ctx, key, bson.M{consts.ID: data.ID}, update)
+	oid, _ := primitive.ObjectIDFromHex(id)
+	key := prefixCommentCacheKey + id
+	_, _ = m.conn.UpdateOne(ctx, key, bson.M{consts.ID: oid}, bson.M{"$inc": bson.M{consts.Count: count}})
 }
 
 func (m *MongoMapper) Delete(ctx context.Context, id string) (int64, error) {
@@ -144,20 +139,6 @@ func (m *MongoMapper) Delete(ctx context.Context, id string) (int64, error) {
 	}
 	key := prefixCommentCacheKey + id
 	resp, err := m.conn.DeleteOne(ctx, key, bson.M{consts.ID: oid})
-	return resp, err
-}
-
-func (m *MongoMapper) DeleteWithUserId(ctx context.Context, id, userId string) (int64, error) {
-	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
-	_, span := tracer.Start(ctx, "mongo.DeleteWithUserId", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
-	defer span.End()
-
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return 0, consts.ErrInvalidId
-	}
-	key := prefixCommentCacheKey + id
-	resp, err := m.conn.DeleteOne(ctx, key, bson.M{consts.ID: oid, consts.UserId: userId})
 	return resp, err
 }
 
