@@ -144,7 +144,7 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *gencomment.Se
 			if err = sessionContext.StartTransaction(); err != nil {
 				return err
 			}
-			if req.Attrs == int64(gencomment.Attrs_None) {
+			if req.Attrs == int64(gencomment.Attrs_None) || req.Attrs == int64(gencomment.Attrs_Highlighted) {
 				if _, err = s.SubjectMongoMapper.Update(sessionContext, &subjectMapper.Subject{ID: oid, TopCommentId: lo.ToPtr("")}); err != nil {
 					if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
 						log.CtxError(sessionContext, "设置评论属性失败[%v]: 回滚异常[%v]\n", err, rbErr)
@@ -169,19 +169,17 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *gencomment.Se
 			if err = sessionContext.StartTransaction(); err != nil {
 				return err
 			}
-			if req.Attrs == int64(gencomment.Attrs_Pinned) || req.Attrs == int64(gencomment.Attrs_PinnedAndHighlighted) || req.Attrs == int64(gencomment.Attrs_None) {
-				var subject *subjectMapper.Subject
-				switch {
-				case req.Attrs == int64(gencomment.Attrs_Pinned) || req.Attrs == int64(gencomment.Attrs_PinnedAndHighlighted):
-					subject = &subjectMapper.Subject{ID: oid, TopCommentId: lo.ToPtr(req.Id)}
-				default:
-					subject = &subjectMapper.Subject{ID: oid, TopCommentId: lo.ToPtr("")}
-				}
-				if _, err = s.SubjectMongoMapper.Update(sessionContext, subject); err != nil {
-					if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
-						log.CtxError(sessionContext, "设置评论属性失败[%v]: 回滚异常[%v]\n", err, rbErr)
-						return err
-					}
+			var subject *subjectMapper.Subject
+			switch {
+			case req.Attrs == int64(gencomment.Attrs_Pinned) || req.Attrs == int64(gencomment.Attrs_PinnedAndHighlighted):
+				subject = &subjectMapper.Subject{ID: oid, TopCommentId: lo.ToPtr(req.Id)}
+			default:
+				subject = &subjectMapper.Subject{ID: oid, TopCommentId: lo.ToPtr("")}
+			}
+			if _, err = s.SubjectMongoMapper.Update(sessionContext, subject); err != nil {
+				if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
+					log.CtxError(sessionContext, "设置评论属性失败[%v]: 回滚异常[%v]\n", err, rbErr)
+					return err
 				}
 			}
 			if _, err = s.CommentMongoMapper.Update(sessionContext, data); err != nil {
