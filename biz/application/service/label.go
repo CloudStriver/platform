@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/CloudStriver/go-pkg/utils/pagination/esp"
+	"github.com/CloudStriver/go-pkg/utils/pagination/mongop"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/convertor"
 	labelMapper "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
@@ -75,10 +76,20 @@ func (s *LabelService) GetLabels(ctx context.Context, req *gencomment.GetLabelsR
 	var total int64
 	var labels []*labelMapper.Label
 	p := convertor.ParsePagination(req.Pagination)
-	if labels, total, err = s.LabelEsMapper.Search(ctx, convertor.ConvertLabelAllFieldsSearchQuery(req.Key), p, esp.ScoreCursorType); err != nil {
-		log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
-		return resp, err
+
+	switch {
+	case req.Key == "":
+		if labels, total, err = s.LabelMongoMapper.FindManyAndCount(ctx, p, mongop.IdCursorType); err != nil {
+			log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
+			return resp, err
+		}
+	case req.Key != "":
+		if labels, total, err = s.LabelEsMapper.Search(ctx, convertor.ConvertLabelAllFieldsSearchQuery(req.Key), p, esp.ScoreCursorType); err != nil {
+			log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
+			return resp, err
+		}
 	}
+
 	if p.LastToken != nil {
 		resp.Token = *p.LastToken
 	}
