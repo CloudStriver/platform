@@ -2,11 +2,14 @@ package label
 
 import (
 	"context"
-	errorx "errors"
+	"errors"
+	"github.com/CloudStriver/go-pkg/utils/pagination"
+	"github.com/CloudStriver/go-pkg/utils/pagination/mongop"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
 	"github.com/samber/lo"
+	"github.com/zeromicro/go-zero/core/mr"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"github.com/zeromicro/go-zero/core/trace"
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,8 +28,11 @@ var _ IMongoMapper = (*MongoMapper)(nil)
 
 type (
 	IMongoMapper interface {
+		Count(ctx context.Context) (int64, error)
 		Insert(ctx context.Context, data *Label) (string, error)
 		FindOne(ctx context.Context, id string) (*Label, error)
+		FindMany(ctx context.Context, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, error)
+		FindManyAndCount(ctx context.Context, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, int64, error)
 		FindManyByIds(ctx context.Context, ids []string) ([]*Label, error)
 		Update(ctx context.Context, data *Label) (*mongo.UpdateResult, error)
 		Delete(ctx context.Context, id string) (int64, error)
@@ -67,6 +73,13 @@ func NewMongoMapper(config *config.Config) IMongoMapper {
 	}
 }
 
+func (m *MongoMapper) Count(ctx context.Context) (int64, error) {
+	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
+	_, span := tracer.Start(ctx, "mongo.Count", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	defer span.End()
+	return m.conn.CountDocuments(ctx, bson.M{})
+}
+
 func (m *MongoMapper) Insert(ctx context.Context, data *Label) (string, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.Insert", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
@@ -98,13 +111,75 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Label, error) {
 	key := prefixCommentCacheKey + id
 	err = m.conn.FindOne(ctx, key, &data, bson.M{consts.ID: oid})
 	switch {
-	case errorx.Is(err, monc.ErrNotFound):
+	case errors.Is(err, monc.ErrNotFound):
 		return nil, consts.ErrNotFound
 	case err == nil:
 		return &data, nil
 	default:
 		return nil, err
 	}
+}
+
+func (m *MongoMapper) FindMany(ctx context.Context, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, error) {
+	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
+	_, span := tracer.Start(ctx, "mongo.FindMany", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	defer span.End()
+
+	p := mongop.NewMongoPaginator(pagination.NewRawStore(sorter), popts)
+	filter := bson.M{}
+	sort, err := p.MakeSortOptions(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []*Label
+	err = m.conn.Find(ctx, &data, filter, &options.FindOptions{
+		Sort:  sort,
+		Limit: popts.Limit,
+		Skip:  popts.Offset,
+	})
+	switch {
+	case errors.Is(err, monc.ErrNotFound):
+		return nil, consts.ErrNotFound
+	case err != nil:
+		log.CtxError(ctx, "查询文件列表: 发生异常[%v]\n", err)
+		return nil, err
+	}
+
+	// 如果是反向查询，反转数据
+	if *popts.Backward {
+		lo.Reverse(data)
+	}
+	if len(data) > 0 {
+		if err = p.StoreCursor(ctx, data[0], data[len(data)-1]); err != nil {
+			return nil, err
+		}
+	}
+
+	return data, nil
+}
+
+func (m *MongoMapper) FindManyAndCount(ctx context.Context, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, int64, error) {
+	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
+	_, span := tracer.Start(ctx, "mongo.FindManyAndCount", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	defer span.End()
+
+	var (
+		err, err1, err2 error
+		data            []*Label
+		total           int64
+	)
+	if err = mr.Finish(func() error {
+		data, err1 = m.FindMany(ctx, popts, sorter)
+		return err1
+	}, func() error {
+		total, err2 = m.Count(ctx)
+		return err2
+	}); err != nil {
+		return nil, 0, err
+	}
+
+	return data, total, nil
 }
 
 func (m *MongoMapper) FindManyByIds(ctx context.Context, ids []string) ([]*Label, error) {
@@ -122,7 +197,7 @@ func (m *MongoMapper) FindManyByIds(ctx context.Context, ids []string) ([]*Label
 		},
 	}
 	if err := m.conn.Find(ctx, &data, filter); err != nil {
-		if errorx.Is(err, monc.ErrNotFound) {
+		if errors.Is(err, monc.ErrNotFound) {
 			return nil, consts.ErrNotFound
 		}
 		return nil, err
