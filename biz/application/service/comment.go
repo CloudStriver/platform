@@ -165,6 +165,10 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *gencomment.Se
 			return nil
 		})
 	} else {
+		var oldComment *commentMapper.Comment
+		if oldComment, err = s.CommentMongoMapper.FindOne(ctx, res.Subject.TopCommentId); err != nil {
+			return resp, err
+		}
 		err = tx.UseSession(ctx, func(sessionContext mongo.SessionContext) error {
 			if err = sessionContext.StartTransaction(); err != nil {
 				return err
@@ -179,14 +183,22 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *gencomment.Se
 			if _, err = s.SubjectMongoMapper.Update(sessionContext, subject); err != nil {
 				if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
 					log.CtxError(sessionContext, "设置评论属性失败[%v]: 回滚异常[%v]\n", err, rbErr)
+
+					return err
+				}
+			}
+			oldData := convertor.CommentToCommentMapper(&gencomment.Comment{Id: res.Subject.TopCommentId, Attrs: int64(gencomment.Attrs_None), SortTime: oldComment.CreateAt.UnixMilli()})
+			if _, err = s.CommentMongoMapper.Update(sessionContext, oldData); err != nil {
+				if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
+					log.CtxError(sessionContext, "设置评论属性失败[%v]: 回滚异常[%v]\n", err, rbErr)
 					return err
 				}
 			}
 			if _, err = s.CommentMongoMapper.Update(sessionContext, data); err != nil {
 				if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
 					log.CtxError(sessionContext, "设置评论属性失败[%v]: 回滚异常[%v]\n", err, rbErr)
-					return err
 				}
+				return err
 			}
 			if err = sessionContext.CommitTransaction(sessionContext); err != nil {
 				log.CtxError(sessionContext, "设置评论属性: 提交事务异常[%v]\n", err)
