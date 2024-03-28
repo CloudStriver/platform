@@ -77,14 +77,23 @@ func (s *LabelService) GetLabels(ctx context.Context, req *gencomment.GetLabelsR
 	var labels []*labelMapper.Label
 	p := convertor.ParsePagination(req.Pagination)
 
-	switch {
-	case req.Key == "":
-		if labels, total, err = s.LabelMongoMapper.FindManyAndCount(ctx, p, mongop.IdCursorType); err != nil {
-			log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
-			return resp, err
+	if req.FilterOptions.Key != nil {
+		switch {
+		case *req.FilterOptions.Key == "":
+			fopts := convertor.LabelFilterOptionsToFilterOptions(req.FilterOptions)
+			if labels, total, err = s.LabelMongoMapper.FindManyAndCount(ctx, fopts, p, mongop.IdCursorType); err != nil {
+				log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
+				return resp, err
+			}
+		case *req.FilterOptions.Key != "":
+			if labels, total, err = s.LabelEsMapper.Search(ctx, convertor.ConvertLabelAllFieldsSearchQuery(*req.FilterOptions.Key), p, esp.ScoreCursorType); err != nil {
+				log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
+				return resp, err
+			}
 		}
-	case req.Key != "":
-		if labels, total, err = s.LabelEsMapper.Search(ctx, convertor.ConvertLabelAllFieldsSearchQuery(req.Key), p, esp.ScoreCursorType); err != nil {
+	} else {
+		fopts := convertor.LabelFilterOptionsToFilterOptions(req.FilterOptions)
+		if labels, total, err = s.LabelMongoMapper.FindManyAndCount(ctx, fopts, p, mongop.IdCursorType); err != nil {
 			log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 			return resp, err
 		}

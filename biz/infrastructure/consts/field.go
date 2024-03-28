@@ -20,6 +20,8 @@ const (
 	UpdateAt  = "updateAt"
 	Value     = "value"
 	Labels    = "labels"
+	Zone      = "zone"
+	SubZone   = "subZone"
 )
 
 const (

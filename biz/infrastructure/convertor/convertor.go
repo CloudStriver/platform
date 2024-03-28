@@ -67,6 +67,17 @@ func CommentFilterOptionsToFilterOptions(data *gencomment.CommentFilterOptions) 
 	}
 }
 
+func LabelFilterOptionsToFilterOptions(data *gencomment.LabelFilterOptions) *label.FilterOptions {
+	if data == nil {
+		return &label.FilterOptions{}
+	} else {
+		return &label.FilterOptions{
+			OnlyZone:    data.Zone,
+			OnlySubZone: data.SubZone,
+		}
+	}
+}
+
 func SubjectToSubjectMapper(data *gencomment.Subject) *subject.Subject {
 	oid, _ := primitive.ObjectIDFromHex(data.Id)
 	return &subject.Subject{
@@ -117,6 +128,8 @@ func ParsePagination(opts *basic.PaginationOptions) (p *pagination.PaginationOpt
 func LabelMapperToLabel(data *label.Label) *gencomment.Label {
 	return &gencomment.Label{
 		LabelId: data.ID.Hex(),
+		Zone:    data.Zone,
+		SubZone: data.SubZone,
 		Value:   data.Value,
 	}
 }
@@ -124,8 +137,10 @@ func LabelMapperToLabel(data *label.Label) *gencomment.Label {
 func LabelToLabelMapper(data *gencomment.Label) *label.Label {
 	oid, _ := primitive.ObjectIDFromHex(data.LabelId)
 	return &label.Label{
-		ID:    oid,
-		Value: data.Value,
+		ID:      oid,
+		Zone:    data.Zone,
+		SubZone: data.SubZone,
+		Value:   data.Value,
 	}
 }
 
