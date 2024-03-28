@@ -28,11 +28,11 @@ var _ IMongoMapper = (*MongoMapper)(nil)
 
 type (
 	IMongoMapper interface {
-		Count(ctx context.Context) (int64, error)
+		Count(ctx context.Context, fopts *FilterOptions) (int64, error)
 		Insert(ctx context.Context, data *Label) (string, error)
 		FindOne(ctx context.Context, id string) (*Label, error)
-		FindMany(ctx context.Context, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, error)
-		FindManyAndCount(ctx context.Context, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, int64, error)
+		FindMany(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, error)
+		FindManyAndCount(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, int64, error)
 		FindManyByIds(ctx context.Context, ids []string) ([]*Label, error)
 		Update(ctx context.Context, data *Label) (*mongo.UpdateResult, error)
 		Delete(ctx context.Context, id string) (int64, error)
@@ -43,6 +43,8 @@ type (
 	Label struct {
 		ID       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 		Value    string             `bson:"value,omitempty" json:"value,omitempty"`
+		Zone     string             `bson:"zone,omitempty" json:"zone,omitempty"`
+		SubZone  string             `bson:"subZone,omitempty" json:"subZone,omitempty"`
 		CreateAt time.Time          `bson:"createAt,omitempty" json:"createAt,omitempty"`
 		UpdateAt time.Time          `bson:"updateAt,omitempty" json:"updateAt,omitempty"`
 		Score_   float64            `bson:"score_,omitempty" json:"score_,omitempty"`
@@ -55,29 +57,17 @@ type (
 
 func NewMongoMapper(config *config.Config) IMongoMapper {
 	conn := monc.MustNewModel(config.Mongo.URL, config.Mongo.DB, CollectionName, config.CacheConf)
-	indexModel := mongo.IndexModel{
-		Keys: bson.M{
-			"value": 1, // 索引字段
-		},
-		Options: options.Index().SetUnique(true), // 唯一性索引
-	}
-	_, err := conn.Indexes().CreateOne(context.Background(), indexModel)
-	if err != nil {
-		log.Error("labelModel Unique index created err[%v]\n", err)
-	} else {
-		log.Info("labelModel Unique index created successfully\n")
-	}
-
 	return &MongoMapper{
 		conn: conn,
 	}
 }
 
-func (m *MongoMapper) Count(ctx context.Context) (int64, error) {
+func (m *MongoMapper) Count(ctx context.Context, fopts *FilterOptions) (int64, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.Count", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
-	return m.conn.CountDocuments(ctx, bson.M{})
+	filter := makeMongoFilter(fopts)
+	return m.conn.CountDocuments(ctx, filter)
 }
 
 func (m *MongoMapper) Insert(ctx context.Context, data *Label) (string, error) {
@@ -120,13 +110,13 @@ func (m *MongoMapper) FindOne(ctx context.Context, id string) (*Label, error) {
 	}
 }
 
-func (m *MongoMapper) FindMany(ctx context.Context, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, error) {
+func (m *MongoMapper) FindMany(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.FindMany", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
 	p := mongop.NewMongoPaginator(pagination.NewRawStore(sorter), popts)
-	filter := bson.M{}
+	filter := makeMongoFilter(fopts)
 	sort, err := p.MakeSortOptions(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -159,7 +149,7 @@ func (m *MongoMapper) FindMany(ctx context.Context, popts *pagination.Pagination
 	return data, nil
 }
 
-func (m *MongoMapper) FindManyAndCount(ctx context.Context, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, int64, error) {
+func (m *MongoMapper) FindManyAndCount(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Label, int64, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.FindManyAndCount", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
@@ -170,10 +160,10 @@ func (m *MongoMapper) FindManyAndCount(ctx context.Context, popts *pagination.Pa
 		total           int64
 	)
 	if err = mr.Finish(func() error {
-		data, err1 = m.FindMany(ctx, popts, sorter)
+		data, err1 = m.FindMany(ctx, fopts, popts, sorter)
 		return err1
 	}, func() error {
-		total, err2 = m.Count(ctx)
+		total, err2 = m.Count(ctx, fopts)
 		return err2
 	}); err != nil {
 		return nil, 0, err
