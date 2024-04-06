@@ -5,8 +5,10 @@ import (
 	errorx "errors"
 	"github.com/CloudStriver/go-pkg/utils/pagination"
 	"github.com/CloudStriver/go-pkg/utils/pagination/mongop"
+	"github.com/CloudStriver/go-pkg/utils/util/log"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
+	"github.com/samber/lo"
 	"github.com/zeromicro/go-zero/core/mr"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"github.com/zeromicro/go-zero/core/trace"
@@ -31,6 +33,7 @@ type (
 		Update(ctx context.Context, data *Comment) (*mongo.UpdateResult, error)
 		UpdateCount(ctx context.Context, id string, count int64)
 		Delete(ctx context.Context, id string) (int64, error)
+		DeleteMany(ctx context.Context, ids []string) (int64, error)
 		Count(ctx context.Context, filter *FilterOptions) (int64, error)
 		FindMany(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Comment, error)
 		FindManyAndCount(ctx context.Context, fopts *FilterOptions, popts *pagination.PaginationOptions, sorter mongop.MongoCursor) ([]*Comment, int64, error)
@@ -139,6 +142,34 @@ func (m *MongoMapper) Delete(ctx context.Context, id string) (int64, error) {
 	}
 	key := prefixCommentCacheKey + id
 	resp, err := m.conn.DeleteOne(ctx, key, bson.M{consts.ID: oid})
+	return resp, err
+}
+
+func (m *MongoMapper) DeleteMany(ctx context.Context, ids []string) (int64, error) {
+	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
+	_, span := tracer.Start(ctx, "mongo.DeleteMany", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	defer span.End()
+
+	var (
+		resp       int64
+		err1, err2 error
+	)
+
+	keys := lo.Map(ids, func(id string, _ int) string {
+		return prefixCommentCacheKey + id
+	})
+	filter := makeMongoFilter(&FilterOptions{OnlyCommentIds: ids})
+	err := mr.Finish(func() error {
+		resp, err1 = m.conn.DeleteMany(ctx, filter)
+		return err1
+	}, func() error {
+		err2 = m.conn.DelCache(ctx, keys...)
+		return err2
+	})
+	if err != nil {
+		log.CtxError(ctx, "删除文件信息: 发生异常[%v]\n", err)
+		return 0, err
+	}
 	return resp, err
 }
 

@@ -91,14 +91,6 @@ func SubjectToSubjectMapper(data *gencomment.Subject) *subject.Subject {
 	}
 }
 
-func SubjectMapperToSubjectInfo(data *subject.Subject) *gencomment.SubjectInfo {
-	return &gencomment.SubjectInfo{
-		Id:     data.ID.Hex(),
-		UserId: data.UserId,
-		Attrs:  data.Attrs,
-	}
-}
-
 func SubjectMapperToSubjectDetail(data *subject.Subject) *gencomment.SubjectDetails {
 	return &gencomment.SubjectDetails{
 		Id:           data.ID.Hex(),

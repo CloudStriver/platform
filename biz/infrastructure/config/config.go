@@ -14,6 +14,15 @@ type ElasticsearchConf struct {
 	Password  string
 }
 
+type KqConfig struct {
+	Brokers []string
+	Topic   string
+}
+
+type EtcdConf struct {
+	Hosts []string
+}
+
 type Config struct {
 	service.ServiceConf
 	ListenOn string
@@ -21,9 +30,16 @@ type Config struct {
 		URL string
 		DB  string
 	}
-	CacheConf     cache.CacheConf
-	Elasticsearch ElasticsearchConf
-	Redis         *redis.RedisConf
+	CacheConf               cache.CacheConf
+	Elasticsearch           ElasticsearchConf
+	Redis                   *redis.RedisConf
+	DeleteCommentRelationKq KqConfig
+	Neo4jConf               struct {
+		Url      string
+		Username string
+		Password string
+		DataBase string
+	}
 }
 
 func NewConfig() (*Config, error) {

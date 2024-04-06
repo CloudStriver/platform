@@ -14,7 +14,7 @@ import (
 
 func main() {
 	klog.SetLogger(log.NewKlogLogger())
-	s, err := provider.NewCommentServerImpl()
+	s, err := provider.NewPlatformServerImpl()
 	if err != nil {
 		panic(err)
 	}
