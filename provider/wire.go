@@ -4,7 +4,7 @@
 package provider
 
 import (
-	"github.com/CloudStriver/platform-comment/biz/adaptor"
+	"github.com/CloudStriver/platform/biz/adaptor"
 	"github.com/google/wire"
 )
 

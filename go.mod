@@ -1,10 +1,10 @@
-module github.com/CloudStriver/platform-comment
+module github.com/CloudStriver/platform
 
 go 1.20
 
 require (
 	github.com/CloudStriver/go-pkg v0.0.0-20240206060942-84060a3dd273
-	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240406082442-939ea3e0c24f // indirect
+	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240406140558-0b39494165c0 // indirect
 	github.com/bytedance/sonic v1.10.2
 	github.com/cloudwego/kitex v0.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
@@ -23,7 +23,7 @@ require (
 //replace github.com/CloudStriver/cloudmind-mq => ../cloudmind-mq
 
 require (
-	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240406113640-f45e6009f85d // indirect
+	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240406130428-3a00c4159388 // indirect
 	github.com/apache/thrift v0.16.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.7.1 // indirect

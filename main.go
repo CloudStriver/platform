@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/CloudStriver/go-pkg/utils/kitex/middleware"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
-	"github.com/CloudStriver/platform-comment/provider"
-	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment/commentservice"
+	"github.com/CloudStriver/platform/provider"
+	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/platformservice"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
@@ -23,7 +23,7 @@ func main() {
 		panic(err)
 	}
 
-	svr := commentservice.NewServer(
+	svr := platformservice.NewServer(
 		s,
 		server.WithServiceAddr(addr),
 		server.WithSuite(tracing.NewServerSuite()),

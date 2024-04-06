@@ -2,18 +2,18 @@ package convertor
 
 import (
 	"github.com/CloudStriver/go-pkg/utils/pagination"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/comment"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
+	"github.com/CloudStriver/platform/biz/infrastructure/consts"
+	"github.com/CloudStriver/platform/biz/infrastructure/mapper/comment"
+	"github.com/CloudStriver/platform/biz/infrastructure/mapper/label"
+	"github.com/CloudStriver/platform/biz/infrastructure/mapper/subject"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/basic"
-	gencomment "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
+	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CommentToCommentMapper(data *gencomment.Comment) *comment.Comment {
+func CommentToCommentMapper(data *platform.Comment) *comment.Comment {
 	oid, _ := primitive.ObjectIDFromHex(data.Id)
 	return &comment.Comment{
 		ID:        oid,
@@ -32,8 +32,8 @@ func CommentToCommentMapper(data *gencomment.Comment) *comment.Comment {
 	}
 }
 
-func CommentMapperToCommentInfo(data *comment.Comment) *gencomment.CommentInfo {
-	return &gencomment.CommentInfo{
+func CommentMapperToCommentInfo(data *comment.Comment) *platform.CommentInfo {
+	return &platform.CommentInfo{
 		Id:         data.ID.Hex(),
 		SubjectId:  data.SubjectId,
 		RootId:     data.RootId,
@@ -50,7 +50,7 @@ func CommentMapperToCommentInfo(data *comment.Comment) *gencomment.CommentInfo {
 	}
 }
 
-func CommentFilterOptionsToFilterOptions(data *gencomment.CommentFilterOptions) *comment.FilterOptions {
+func CommentFilterOptionsToFilterOptions(data *platform.CommentFilterOptions) *comment.FilterOptions {
 	if data == nil {
 		return &comment.FilterOptions{}
 	} else {
@@ -67,7 +67,7 @@ func CommentFilterOptionsToFilterOptions(data *gencomment.CommentFilterOptions) 
 	}
 }
 
-func LabelFilterOptionsToFilterOptions(data *gencomment.LabelFilterOptions) *label.FilterOptions {
+func LabelFilterOptionsToFilterOptions(data *platform.LabelFilterOptions) *label.FilterOptions {
 	if data == nil {
 		return &label.FilterOptions{}
 	} else {
@@ -78,7 +78,7 @@ func LabelFilterOptionsToFilterOptions(data *gencomment.LabelFilterOptions) *lab
 	}
 }
 
-func SubjectToSubjectMapper(data *gencomment.Subject) *subject.Subject {
+func SubjectToSubjectMapper(data *platform.Subject) *subject.Subject {
 	oid, _ := primitive.ObjectIDFromHex(data.Id)
 	return &subject.Subject{
 		ID:           oid,
@@ -91,8 +91,8 @@ func SubjectToSubjectMapper(data *gencomment.Subject) *subject.Subject {
 	}
 }
 
-func SubjectMapperToSubjectDetail(data *subject.Subject) *gencomment.SubjectDetails {
-	return &gencomment.SubjectDetails{
+func SubjectMapperToSubjectDetail(data *subject.Subject) *platform.SubjectDetails {
+	return &platform.SubjectDetails{
 		Id:           data.ID.Hex(),
 		UserId:       data.UserId,
 		TopCommentId: *data.TopCommentId,
@@ -117,8 +117,8 @@ func ParsePagination(opts *basic.PaginationOptions) (p *pagination.PaginationOpt
 	return
 }
 
-func LabelMapperToLabel(data *label.Label) *gencomment.Label {
-	return &gencomment.Label{
+func LabelMapperToLabel(data *label.Label) *platform.Label {
+	return &platform.Label{
 		LabelId: data.ID.Hex(),
 		Zone:    data.Zone,
 		SubZone: data.SubZone,
@@ -126,7 +126,7 @@ func LabelMapperToLabel(data *label.Label) *gencomment.Label {
 	}
 }
 
-func LabelToLabelMapper(data *gencomment.Label) *label.Label {
+func LabelToLabelMapper(data *platform.Label) *label.Label {
 	oid, _ := primitive.ObjectIDFromHex(data.LabelId)
 	return &label.Label{
 		ID:      oid,
