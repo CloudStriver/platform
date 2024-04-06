@@ -22,6 +22,7 @@ type ICommentService interface {
 	CreateComment(ctx context.Context, req *gencomment.CreateCommentReq) (resp *gencomment.CreateCommentResp, err error)
 	UpdateComment(ctx context.Context, req *gencomment.UpdateCommentReq) (resp *gencomment.UpdateCommentResp, err error)
 	DeleteComment(ctx context.Context, req *gencomment.DeleteCommentReq) (resp *gencomment.DeleteCommentResp, err error)
+	DeleteCommentByIds(ctx context.Context, req *gencomment.DeleteCommentByIdsReq) (resp *gencomment.DeleteCommentByIdsResp, err error)
 	SetCommentAttrs(ctx context.Context, req *gencomment.SetCommentAttrsReq, res *gencomment.GetCommentSubjectResp) (resp *gencomment.SetCommentAttrsResp, err error)
 }
 
@@ -34,6 +35,15 @@ var CommentSet = wire.NewSet(
 	wire.Struct(new(CommentService), "*"),
 	wire.Bind(new(ICommentService), new(*CommentService)),
 )
+
+func (s *CommentService) DeleteCommentByIds(ctx context.Context, req *gencomment.DeleteCommentByIdsReq) (resp *gencomment.DeleteCommentByIdsResp, err error) {
+	resp = new(gencomment.DeleteCommentByIdsResp)
+	if _, err = s.CommentMongoMapper.DeleteMany(ctx, req.Ids); err != nil {
+		log.CtxError(ctx, "删除评论 失败[%v]\n", err)
+		return resp, err
+	}
+	return resp, nil
+}
 
 func (s *CommentService) GetComment(ctx context.Context, req *gencomment.GetCommentReq) (resp *gencomment.GetCommentResp, err error) {
 	resp = new(gencomment.GetCommentResp)

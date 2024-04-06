@@ -8,9 +8,9 @@ import (
 	"github.com/google/wire"
 )
 
-func NewCommentServerImpl() (*adaptor.CommentServerImpl, error) {
+func NewPlatformServerImpl() (*adaptor.PlatformServerImpl, error) {
 	wire.Build(
-		wire.Struct(new(adaptor.CommentServerImpl), "*"),
+		wire.Struct(new(adaptor.PlatformServerImpl), "*"),
 		AllProvider,
 	)
 	return nil, nil

@@ -4,25 +4,28 @@ go 1.20
 
 require (
 	github.com/CloudStriver/cloudmind-content v0.0.0-20240123023815-46c6b9fd0d47
-	github.com/CloudStriver/go-pkg v0.0.0-20231229114943-910edcb8788d
-	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240328081708-6b8550b22aa9 // indirect
+	github.com/CloudStriver/go-pkg v0.0.0-20240206060942-84060a3dd273
+	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240402021409-326abc356747 // indirect
 	github.com/bytedance/sonic v1.10.2
 	github.com/cloudwego/kitex v0.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
 	github.com/google/wire v0.5.0
 	github.com/kitex-contrib/obs-opentelemetry v0.2.5
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/samber/lo v1.38.1
+	github.com/samber/lo v1.39.0
 	github.com/zeromicro/go-zero v1.6.1
 	go.mongodb.org/mongo-driver v1.13.1
 	go.opentelemetry.io/otel v1.19.0
 	go.opentelemetry.io/otel/trace v1.19.0
-	google.golang.org/grpc v1.60.1
+	google.golang.org/grpc v1.61.0
 )
 
-//replace github.com/CloudStriver/service-idl-gen-go => ../service-idl-gen-go
+replace github.com/CloudStriver/service-idl-gen-go => ../service-idl-gen-go
+
+replace github.com/CloudStriver/cloudmind-mq => ../cloudmind-mq
 
 require (
+	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240402110201-7972a2140b4d // indirect
 	github.com/apache/thrift v0.16.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.7.1 // indirect
@@ -56,6 +59,7 @@ require (
 	github.com/jhump/protoreflect v1.15.4 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/kitex-contrib/monitor-prometheus v0.2.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -65,14 +69,17 @@ require (
 	github.com/modern-go/gls v0.0.0-20220109145502-612d0167dce5 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
+	github.com/neo4j/neo4j-go-driver/v5 v5.19.0 // indirect
 	github.com/oleiade/lane v1.0.1 // indirect
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
+	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.17.0 // indirect
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
+	github.com/segmentio/kafka-go v0.4.38 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
@@ -83,6 +90,7 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
+	github.com/zeromicro/go-queue v1.1.8 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.19.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.19.0 // indirect
@@ -100,8 +108,8 @@ require (
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20231016165738-49dd2c1f3d0b // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231016165738-49dd2c1f3d0b // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -10,14 +10,17 @@ import (
 	"github.com/CloudStriver/platform-comment/biz/adaptor"
 	"github.com/CloudStriver/platform-comment/biz/application/service"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/kq"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/comment"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/relation"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/stores/redis"
 )
 
 // Injectors from wire.go:
 
-func NewCommentServerImpl() (*adaptor.CommentServerImpl, error) {
+func NewPlatformServerImpl() (*adaptor.PlatformServerImpl, error) {
 	configConfig, err := config.NewConfig()
 	if err != nil {
 		return nil, err
@@ -34,14 +37,24 @@ func NewCommentServerImpl() (*adaptor.CommentServerImpl, error) {
 		LabelEsMapper:    iEsMapper,
 		LabelMongoMapper: labelIMongoMapper,
 	}
+	deleteCommentRelationKq := kq.NewDeleteCommentRelationKq(configConfig)
 	subjectService := &service.SubjectService{
-		SubjectMongoMapper: subjectIMongoMapper,
+		SubjectMongoMapper:   subjectIMongoMapper,
+		DeleteFileRelationKq: deleteCommentRelationKq,
 	}
-	commentServerImpl := &adaptor.CommentServerImpl{
-		Config:         configConfig,
-		CommentService: commentService,
-		LabelService:   labelService,
-		SubjectService: subjectService,
+	redisRedis := redis.NewRedis(configConfig)
+	relationNeo4jMapper := relation.NewNeo4jMapper(configConfig)
+	relationServiceImpl := &service.RelationServiceImpl{
+		Config:        configConfig,
+		Redis:         redisRedis,
+		RelationModel: relationNeo4jMapper,
 	}
-	return commentServerImpl, nil
+	platformServerImpl := &adaptor.PlatformServerImpl{
+		Config:          configConfig,
+		CommentService:  commentService,
+		LabelService:    labelService,
+		SubjectService:  subjectService,
+		RelationService: relationServiceImpl,
+	}
+	return platformServerImpl, nil
 }

@@ -2,19 +2,21 @@ package comment
 
 import (
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
+	"github.com/samber/lo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type FilterOptions struct {
-	OnlyUserId    *string
-	OnlyAtUserId  *string
-	OnlyCommentId *string
-	OnlySubjectId *string
-	OnlyRootId    *string
-	OnlyFatherId  *string
-	OnlyState     *int64
-	OnlyAttrs     *int64
+	OnlyUserId     *string
+	OnlyAtUserId   *string
+	OnlyCommentId  *string
+	OnlySubjectId  *string
+	OnlyRootId     *string
+	OnlyFatherId   *string
+	OnlyCommentIds []string
+	OnlyState      *int64
+	OnlyAttrs      *int64
 }
 
 type MongoIndexFilter struct {
@@ -39,6 +41,17 @@ func (f *MongoIndexFilter) toBson() bson.M {
 	f.CheckOnlyState()
 	f.CheckOnlyAttrs()
 	return f.M
+}
+
+func (f *MongoIndexFilter) CheckOnlyFileIds() {
+	if f.OnlyCommentIds != nil {
+		f.M[consts.ID] = bson.M{
+			"$in": lo.Map[string, primitive.ObjectID](f.OnlyCommentIds, func(s string, _ int) primitive.ObjectID {
+				oid, _ := primitive.ObjectIDFromHex(s)
+				return oid
+			}),
+		}
+	}
 }
 
 func (f *MongoIndexFilter) CheckOnlyUserId() {

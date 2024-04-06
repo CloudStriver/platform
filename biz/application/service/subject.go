@@ -3,11 +3,16 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/CloudStriver/cloudmind-mq/app/util/message"
+	"github.com/CloudStriver/go-pkg/utils/pconvertor"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
 	"github.com/CloudStriver/platform-comment/biz/infrastructure/convertor"
+	"github.com/CloudStriver/platform-comment/biz/infrastructure/kq"
 	subjectMapper "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
+	gencontent "github.com/CloudStriver/service-idl-gen-go/kitex_gen/cloudmind/content"
 	gencomment "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
+	"github.com/bytedance/sonic"
 	"github.com/google/wire"
 )
 
@@ -20,7 +25,8 @@ type ISubjectService interface {
 }
 
 type SubjectService struct {
-	SubjectMongoMapper subjectMapper.IMongoMapper
+	SubjectMongoMapper   subjectMapper.IMongoMapper
+	DeleteFileRelationKq *kq.DeleteCommentRelationKq
 }
 
 var SubjectSet = wire.NewSet(
@@ -80,5 +86,16 @@ func (s *SubjectService) DeleteCommentSubject(ctx context.Context, req *gencomme
 		log.CtxError(ctx, "删除评论区 失败[%v]\n", err)
 		return resp, err
 	}
+
+	// 发送删除评论区关联文件的消息
+	data, _ := sonic.Marshal(&message.DeleteCommentRelationsMessage{
+		FromType: int64(gencontent.TargetType_UserType),
+		FromId:   req.UserId,
+	})
+
+	if err2 := s.DeleteFileRelationKq.Push(pconvertor.Bytes2String(data)); err2 != nil {
+		return resp, err2
+	}
+
 	return resp, nil
 }
