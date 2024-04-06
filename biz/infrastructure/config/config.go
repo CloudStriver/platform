@@ -30,16 +30,16 @@ type Config struct {
 		URL string
 		DB  string
 	}
-	CacheConf               cache.CacheConf
-	Elasticsearch           ElasticsearchConf
-	Redis                   *redis.RedisConf
-	DeleteCommentRelationKq KqConfig
-	Neo4jConf               struct {
+	CacheConf     cache.CacheConf
+	Elasticsearch ElasticsearchConf
+	Redis         *redis.RedisConf
+	Neo4jConf     struct {
 		Url      string
 		Username string
 		Password string
 		DataBase string
 	}
+	DeleteCommentRelationKq KqConfig
 }
 
 func NewConfig() (*Config, error) {
