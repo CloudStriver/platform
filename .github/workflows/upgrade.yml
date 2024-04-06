@@ -16,7 +16,7 @@ on:
 env:
   REGISTRY: docker.io
   USERNAME: lansongxx
-  IMAGE_NAME: platform-comment
+  IMAGE_NAME: platform
 
 jobs:
   build:
