@@ -3,9 +3,8 @@ module github.com/CloudStriver/platform-comment
 go 1.20
 
 require (
-	github.com/CloudStriver/cloudmind-content v0.0.0-20240123023815-46c6b9fd0d47
 	github.com/CloudStriver/go-pkg v0.0.0-20240206060942-84060a3dd273
-	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240402021409-326abc356747 // indirect
+	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240406082442-939ea3e0c24f // indirect
 	github.com/bytedance/sonic v1.10.2
 	github.com/cloudwego/kitex v0.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
@@ -20,12 +19,11 @@ require (
 	google.golang.org/grpc v1.61.0
 )
 
-replace github.com/CloudStriver/service-idl-gen-go => ../service-idl-gen-go
-
-replace github.com/CloudStriver/cloudmind-mq => ../cloudmind-mq
+//replace github.com/CloudStriver/service-idl-gen-go => ../service-idl-gen-go
+//replace github.com/CloudStriver/cloudmind-mq => ../cloudmind-mq
 
 require (
-	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240402110201-7972a2140b4d // indirect
+	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240406113640-f45e6009f85d // indirect
 	github.com/apache/thrift v0.16.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.7.1 // indirect
