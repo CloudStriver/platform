@@ -1,6 +1,6 @@
 package relation
 
-import "github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
+import "github.com/CloudStriver/platform/biz/infrastructure/consts"
 
 type FilterOptions struct {
 	OnlyFromType     *int64

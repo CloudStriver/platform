@@ -2,11 +2,10 @@ package adaptor
 
 import (
 	"context"
-	"github.com/CloudStriver/platform-comment/biz/application/service"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
-	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
-	genrelation "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/relation"
+	"github.com/CloudStriver/platform/biz/application/service"
+	"github.com/CloudStriver/platform/biz/infrastructure/config"
+	"github.com/CloudStriver/platform/biz/infrastructure/consts"
+	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/zeromicro/go-zero/core/mr"
 )
 
@@ -18,47 +17,47 @@ type PlatformServerImpl struct {
 	RelationService service.RelationService
 }
 
-func (s *PlatformServerImpl) DeleteNode(ctx context.Context, req *genrelation.DeleteNodeReq) (res *genrelation.DeleteNodeResp, err error) {
+func (s *PlatformServerImpl) DeleteNode(ctx context.Context, req *platform.DeleteNodeReq) (res *platform.DeleteNodeResp, err error) {
 	return s.RelationService.DeleteNode(ctx, req)
 }
 
-func (s *PlatformServerImpl) GetRelationPaths(ctx context.Context, req *genrelation.GetRelationPathsReq) (res *genrelation.GetRelationPathsResp, err error) {
+func (s *PlatformServerImpl) GetRelationPaths(ctx context.Context, req *platform.GetRelationPathsReq) (res *platform.GetRelationPathsResp, err error) {
 	return s.RelationService.GetRelationPaths(ctx, req)
 }
 
-func (s *PlatformServerImpl) GetRelationCount(ctx context.Context, req *genrelation.GetRelationCountReq) (res *genrelation.GetRelationCountResp, err error) {
+func (s *PlatformServerImpl) GetRelationCount(ctx context.Context, req *platform.GetRelationCountReq) (res *platform.GetRelationCountResp, err error) {
 	return s.RelationService.GetRelationCount(ctx, req)
 }
 
-func (s *PlatformServerImpl) GetRelations(ctx context.Context, req *genrelation.GetRelationsReq) (resp *genrelation.GetRelationsResp, err error) {
+func (s *PlatformServerImpl) GetRelations(ctx context.Context, req *platform.GetRelationsReq) (resp *platform.GetRelationsResp, err error) {
 	return s.RelationService.GetRelations(ctx, req)
 }
 
-func (s *PlatformServerImpl) DeleteRelation(ctx context.Context, req *genrelation.DeleteRelationReq) (resp *genrelation.DeleteRelationResp, err error) {
+func (s *PlatformServerImpl) DeleteRelation(ctx context.Context, req *platform.DeleteRelationReq) (resp *platform.DeleteRelationResp, err error) {
 	return s.RelationService.DeleteRelation(ctx, req)
 }
 
-func (s *PlatformServerImpl) CreateRelation(ctx context.Context, req *genrelation.CreateRelationReq) (resp *genrelation.CreateRelationResp, err error) {
+func (s *PlatformServerImpl) CreateRelation(ctx context.Context, req *platform.CreateRelationReq) (resp *platform.CreateRelationResp, err error) {
 	return s.RelationService.CreateRelation(ctx, req)
 }
 
-func (s *PlatformServerImpl) GetRelation(ctx context.Context, req *genrelation.GetRelationReq) (resp *genrelation.GetRelationResp, err error) {
+func (s *PlatformServerImpl) GetRelation(ctx context.Context, req *platform.GetRelationReq) (resp *platform.GetRelationResp, err error) {
 	return s.RelationService.GetRelation(ctx, req)
 }
 
-func (c *PlatformServerImpl) DeleteCommentByIds(ctx context.Context, req *comment.DeleteCommentByIdsReq) (res *comment.DeleteCommentByIdsResp, err error) {
+func (c *PlatformServerImpl) DeleteCommentByIds(ctx context.Context, req *platform.DeleteCommentByIdsReq) (res *platform.DeleteCommentByIdsResp, err error) {
 	return c.CommentService.DeleteCommentByIds(ctx, req)
 }
 
-func (c *PlatformServerImpl) GetComment(ctx context.Context, req *comment.GetCommentReq) (res *comment.GetCommentResp, err error) {
+func (c *PlatformServerImpl) GetComment(ctx context.Context, req *platform.GetCommentReq) (res *platform.GetCommentResp, err error) {
 	return c.CommentService.GetComment(ctx, req)
 }
 
-func (c *PlatformServerImpl) GetCommentList(ctx context.Context, req *comment.GetCommentListReq) (res *comment.GetCommentListResp, err error) {
+func (c *PlatformServerImpl) GetCommentList(ctx context.Context, req *platform.GetCommentListReq) (res *platform.GetCommentListResp, err error) {
 	return c.CommentService.GetCommentList(ctx, req)
 }
 
-func (c *PlatformServerImpl) CreateComment(ctx context.Context, req *comment.CreateCommentReq) (res *comment.CreateCommentResp, err error) {
+func (c *PlatformServerImpl) CreateComment(ctx context.Context, req *platform.CreateCommentReq) (res *platform.CreateCommentResp, err error) {
 	if res, err = c.CommentService.CreateComment(ctx, req); err != nil {
 		return res, err
 	}
@@ -72,13 +71,13 @@ func (c *PlatformServerImpl) CreateComment(ctx context.Context, req *comment.Cre
 	return res, nil
 }
 
-func (c *PlatformServerImpl) UpdateComment(ctx context.Context, req *comment.UpdateCommentReq) (res *comment.UpdateCommentResp, err error) {
+func (c *PlatformServerImpl) UpdateComment(ctx context.Context, req *platform.UpdateCommentReq) (res *platform.UpdateCommentResp, err error) {
 	return c.CommentService.UpdateComment(ctx, req)
 }
 
-func (c *PlatformServerImpl) DeleteComment(ctx context.Context, req *comment.DeleteCommentReq) (res *comment.DeleteCommentResp, err error) {
-	var data *comment.GetCommentResp
-	if data, err = c.CommentService.GetComment(ctx, &comment.GetCommentReq{CommentId: req.Id}); err != nil {
+func (c *PlatformServerImpl) DeleteComment(ctx context.Context, req *platform.DeleteCommentReq) (res *platform.DeleteCommentResp, err error) {
+	var data *platform.GetCommentResp
+	if data, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{CommentId: req.Id}); err != nil {
 		return res, err
 	}
 	if res, err = c.CommentService.DeleteComment(ctx, req); err != nil {
@@ -94,50 +93,50 @@ func (c *PlatformServerImpl) DeleteComment(ctx context.Context, req *comment.Del
 	return res, nil
 }
 
-func (c *PlatformServerImpl) SetCommentAttrs(ctx context.Context, req *comment.SetCommentAttrsReq) (res *comment.SetCommentAttrsResp, err error) {
-	var resp *comment.GetCommentSubjectResp
-	if resp, err = c.SubjectService.GetCommentSubject(ctx, &comment.GetCommentSubjectReq{Id: req.SubjectId}); err != nil {
+func (c *PlatformServerImpl) SetCommentAttrs(ctx context.Context, req *platform.SetCommentAttrsReq) (res *platform.SetCommentAttrsResp, err error) {
+	var resp *platform.GetCommentSubjectResp
+	if resp, err = c.SubjectService.GetCommentSubject(ctx, &platform.GetCommentSubjectReq{Id: req.SubjectId}); err != nil {
 		return res, err
 	}
 	return c.CommentService.SetCommentAttrs(ctx, req, resp)
 }
 
-func (c *PlatformServerImpl) GetCommentSubject(ctx context.Context, req *comment.GetCommentSubjectReq) (res *comment.GetCommentSubjectResp, err error) {
+func (c *PlatformServerImpl) GetCommentSubject(ctx context.Context, req *platform.GetCommentSubjectReq) (res *platform.GetCommentSubjectResp, err error) {
 	return c.SubjectService.GetCommentSubject(ctx, req)
 }
 
-func (c *PlatformServerImpl) CreateCommentSubject(ctx context.Context, req *comment.CreateCommentSubjectReq) (res *comment.CreateCommentSubjectResp, err error) {
+func (c *PlatformServerImpl) CreateCommentSubject(ctx context.Context, req *platform.CreateCommentSubjectReq) (res *platform.CreateCommentSubjectResp, err error) {
 	return c.SubjectService.CreateCommentSubject(ctx, req)
 }
 
-func (c *PlatformServerImpl) UpdateCommentSubject(ctx context.Context, req *comment.UpdateCommentSubjectReq) (res *comment.UpdateCommentSubjectResp, err error) {
+func (c *PlatformServerImpl) UpdateCommentSubject(ctx context.Context, req *platform.UpdateCommentSubjectReq) (res *platform.UpdateCommentSubjectResp, err error) {
 	return c.SubjectService.UpdateCommentSubject(ctx, req)
 }
 
-func (c *PlatformServerImpl) DeleteCommentSubject(ctx context.Context, req *comment.DeleteCommentSubjectReq) (res *comment.DeleteCommentSubjectResp, err error) {
+func (c *PlatformServerImpl) DeleteCommentSubject(ctx context.Context, req *platform.DeleteCommentSubjectReq) (res *platform.DeleteCommentSubjectResp, err error) {
 	return c.SubjectService.DeleteCommentSubject(ctx, req)
 }
 
-func (c *PlatformServerImpl) CreateLabel(ctx context.Context, req *comment.CreateLabelReq) (res *comment.CreateLabelResp, err error) {
+func (c *PlatformServerImpl) CreateLabel(ctx context.Context, req *platform.CreateLabelReq) (res *platform.CreateLabelResp, err error) {
 	return c.LabelService.CreateLabel(ctx, req)
 }
 
-func (c *PlatformServerImpl) DeleteLabel(ctx context.Context, req *comment.DeleteLabelReq) (res *comment.DeleteLabelResp, err error) {
+func (c *PlatformServerImpl) DeleteLabel(ctx context.Context, req *platform.DeleteLabelReq) (res *platform.DeleteLabelResp, err error) {
 	return c.LabelService.DeleteLabel(ctx, req)
 }
 
-func (c *PlatformServerImpl) GetLabel(ctx context.Context, req *comment.GetLabelReq) (res *comment.GetLabelResp, err error) {
+func (c *PlatformServerImpl) GetLabel(ctx context.Context, req *platform.GetLabelReq) (res *platform.GetLabelResp, err error) {
 	return c.LabelService.GetLabel(ctx, req)
 }
 
-func (c *PlatformServerImpl) GetLabels(ctx context.Context, req *comment.GetLabelsReq) (res *comment.GetLabelsResp, err error) {
+func (c *PlatformServerImpl) GetLabels(ctx context.Context, req *platform.GetLabelsReq) (res *platform.GetLabelsResp, err error) {
 	return c.LabelService.GetLabels(ctx, req)
 }
 
-func (c *PlatformServerImpl) GetLabelsInBatch(ctx context.Context, req *comment.GetLabelsInBatchReq) (res *comment.GetLabelsInBatchResp, err error) {
+func (c *PlatformServerImpl) GetLabelsInBatch(ctx context.Context, req *platform.GetLabelsInBatchReq) (res *platform.GetLabelsInBatchResp, err error) {
 	return c.LabelService.GetLabelsInBatch(ctx, req)
 }
 
-func (c *PlatformServerImpl) UpdateLabel(ctx context.Context, req *comment.UpdateLabelReq) (res *comment.UpdateLabelResp, err error) {
+func (c *PlatformServerImpl) UpdateLabel(ctx context.Context, req *platform.UpdateLabelReq) (res *platform.UpdateLabelResp, err error) {
 	return c.LabelService.UpdateLabel(ctx, req)
 }

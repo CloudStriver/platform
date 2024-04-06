@@ -5,20 +5,20 @@ import (
 	"github.com/CloudStriver/go-pkg/utils/pagination/esp"
 	"github.com/CloudStriver/go-pkg/utils/pagination/mongop"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/convertor"
-	labelMapper "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
-	gencomment "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
+	"github.com/CloudStriver/platform/biz/infrastructure/convertor"
+	labelMapper "github.com/CloudStriver/platform/biz/infrastructure/mapper/label"
+	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/google/wire"
 	"github.com/samber/lo"
 )
 
 type ILabelService interface {
-	CreateLabel(ctx context.Context, req *gencomment.CreateLabelReq) (resp *gencomment.CreateLabelResp, err error)
-	DeleteLabel(ctx context.Context, req *gencomment.DeleteLabelReq) (resp *gencomment.DeleteLabelResp, err error)
-	GetLabel(ctx context.Context, req *gencomment.GetLabelReq) (resp *gencomment.GetLabelResp, err error)
-	GetLabelsInBatch(ctx context.Context, req *gencomment.GetLabelsInBatchReq) (resp *gencomment.GetLabelsInBatchResp, err error)
-	UpdateLabel(ctx context.Context, req *gencomment.UpdateLabelReq) (resp *gencomment.UpdateLabelResp, err error)
-	GetLabels(ctx context.Context, req *gencomment.GetLabelsReq) (resp *gencomment.GetLabelsResp, err error)
+	CreateLabel(ctx context.Context, req *platform.CreateLabelReq) (resp *platform.CreateLabelResp, err error)
+	DeleteLabel(ctx context.Context, req *platform.DeleteLabelReq) (resp *platform.DeleteLabelResp, err error)
+	GetLabel(ctx context.Context, req *platform.GetLabelReq) (resp *platform.GetLabelResp, err error)
+	GetLabelsInBatch(ctx context.Context, req *platform.GetLabelsInBatchReq) (resp *platform.GetLabelsInBatchResp, err error)
+	UpdateLabel(ctx context.Context, req *platform.UpdateLabelReq) (resp *platform.UpdateLabelResp, err error)
+	GetLabels(ctx context.Context, req *platform.GetLabelsReq) (resp *platform.GetLabelsResp, err error)
 }
 
 type LabelService struct {
@@ -31,8 +31,8 @@ var LabelSet = wire.NewSet(
 	wire.Bind(new(ILabelService), new(*LabelService)),
 )
 
-func (s *LabelService) CreateLabel(ctx context.Context, req *gencomment.CreateLabelReq) (resp *gencomment.CreateLabelResp, err error) {
-	resp = new(gencomment.CreateLabelResp)
+func (s *LabelService) CreateLabel(ctx context.Context, req *platform.CreateLabelReq) (resp *platform.CreateLabelResp, err error) {
+	resp = new(platform.CreateLabelResp)
 	var id string
 	if id, err = s.LabelMongoMapper.Insert(ctx, convertor.LabelToLabelMapper(req.Label)); err != nil {
 		log.CtxError(ctx, "创建标签 失败[%v]\n", err)
@@ -42,8 +42,8 @@ func (s *LabelService) CreateLabel(ctx context.Context, req *gencomment.CreateLa
 	return resp, nil
 }
 
-func (s *LabelService) DeleteLabel(ctx context.Context, req *gencomment.DeleteLabelReq) (resp *gencomment.DeleteLabelResp, err error) {
-	resp = new(gencomment.DeleteLabelResp)
+func (s *LabelService) DeleteLabel(ctx context.Context, req *platform.DeleteLabelReq) (resp *platform.DeleteLabelResp, err error) {
+	resp = new(platform.DeleteLabelResp)
 	if _, err = s.LabelMongoMapper.Delete(ctx, req.Id); err != nil {
 		log.CtxError(ctx, "删除标签 失败[%v]\n", err)
 		return resp, err
@@ -51,8 +51,8 @@ func (s *LabelService) DeleteLabel(ctx context.Context, req *gencomment.DeleteLa
 	return resp, nil
 }
 
-func (s *LabelService) GetLabel(ctx context.Context, req *gencomment.GetLabelReq) (resp *gencomment.GetLabelResp, err error) {
-	resp = new(gencomment.GetLabelResp)
+func (s *LabelService) GetLabel(ctx context.Context, req *platform.GetLabelReq) (resp *platform.GetLabelResp, err error) {
+	resp = new(platform.GetLabelResp)
 	var label *labelMapper.Label
 	if label, err = s.LabelMongoMapper.FindOne(ctx, req.Id); err != nil {
 		log.CtxError(ctx, "获取标签 失败[%v]\n", err)
@@ -62,8 +62,8 @@ func (s *LabelService) GetLabel(ctx context.Context, req *gencomment.GetLabelReq
 	return resp, nil
 }
 
-func (s *LabelService) UpdateLabel(ctx context.Context, req *gencomment.UpdateLabelReq) (resp *gencomment.UpdateLabelResp, err error) {
-	resp = new(gencomment.UpdateLabelResp)
+func (s *LabelService) UpdateLabel(ctx context.Context, req *platform.UpdateLabelReq) (resp *platform.UpdateLabelResp, err error) {
+	resp = new(platform.UpdateLabelResp)
 	if _, err = s.LabelMongoMapper.Update(ctx, convertor.LabelToLabelMapper(req.Label)); err != nil {
 		log.CtxError(ctx, "获取标签 失败[%v]\n", err)
 		return resp, err
@@ -71,8 +71,8 @@ func (s *LabelService) UpdateLabel(ctx context.Context, req *gencomment.UpdateLa
 	return resp, nil
 }
 
-func (s *LabelService) GetLabels(ctx context.Context, req *gencomment.GetLabelsReq) (resp *gencomment.GetLabelsResp, err error) {
-	resp = new(gencomment.GetLabelsResp)
+func (s *LabelService) GetLabels(ctx context.Context, req *platform.GetLabelsReq) (resp *platform.GetLabelsResp, err error) {
+	resp = new(platform.GetLabelsResp)
 	var total int64
 	var labels []*labelMapper.Label
 	p := convertor.ParsePagination(req.Pagination)
@@ -102,15 +102,15 @@ func (s *LabelService) GetLabels(ctx context.Context, req *gencomment.GetLabelsR
 	if p.LastToken != nil {
 		resp.Token = *p.LastToken
 	}
-	resp.Labels = lo.Map(labels, func(item *labelMapper.Label, _ int) *gencomment.Label {
+	resp.Labels = lo.Map(labels, func(item *labelMapper.Label, _ int) *platform.Label {
 		return convertor.LabelMapperToLabel(item)
 	})
 	resp.Total = total
 	return
 }
 
-func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *gencomment.GetLabelsInBatchReq) (resp *gencomment.GetLabelsInBatchResp, err error) {
-	resp = new(gencomment.GetLabelsInBatchResp)
+func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *platform.GetLabelsInBatchReq) (resp *platform.GetLabelsInBatchResp, err error) {
+	resp = new(platform.GetLabelsInBatchResp)
 	var labels []*labelMapper.Label
 	if labels, err = s.LabelMongoMapper.FindManyByIds(ctx, req.LabelIds); err != nil {
 		log.CtxError(ctx, "获取标签集 失败[%v]\n", err)

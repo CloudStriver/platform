@@ -1,14 +1,14 @@
 package provider
 
 import (
-	"github.com/CloudStriver/platform-comment/biz/application/service"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/kq"
-	commentModel "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/comment"
-	labelModel "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/label"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/relation"
-	subjectModel "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/stores/redis"
+	"github.com/CloudStriver/platform/biz/application/service"
+	"github.com/CloudStriver/platform/biz/infrastructure/config"
+	"github.com/CloudStriver/platform/biz/infrastructure/kq"
+	commentModel "github.com/CloudStriver/platform/biz/infrastructure/mapper/comment"
+	labelModel "github.com/CloudStriver/platform/biz/infrastructure/mapper/label"
+	"github.com/CloudStriver/platform/biz/infrastructure/mapper/relation"
+	subjectModel "github.com/CloudStriver/platform/biz/infrastructure/mapper/subject"
+	"github.com/CloudStriver/platform/biz/infrastructure/stores/redis"
 	"github.com/google/wire"
 )
 

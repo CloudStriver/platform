@@ -3,8 +3,8 @@ package subject
 import (
 	"context"
 	errorx "errors"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
+	"github.com/CloudStriver/platform/biz/infrastructure/config"
+	"github.com/CloudStriver/platform/biz/infrastructure/consts"
 	"github.com/zeromicro/go-zero/core/stores/monc"
 	"github.com/zeromicro/go-zero/core/trace"
 	"go.mongodb.org/mongo-driver/bson"

@@ -2,26 +2,25 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/CloudStriver/cloudmind-mq/app/util/message"
 	"github.com/CloudStriver/go-pkg/utils/pconvertor"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/convertor"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/kq"
-	subjectMapper "github.com/CloudStriver/platform-comment/biz/infrastructure/mapper/subject"
+	"github.com/CloudStriver/platform/biz/infrastructure/consts"
+	"github.com/CloudStriver/platform/biz/infrastructure/convertor"
+	"github.com/CloudStriver/platform/biz/infrastructure/kq"
+	subjectMapper "github.com/CloudStriver/platform/biz/infrastructure/mapper/subject"
 	gencontent "github.com/CloudStriver/service-idl-gen-go/kitex_gen/cloudmind/content"
-	gencomment "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/comment"
+	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/bytedance/sonic"
 	"github.com/google/wire"
 )
 
 type ISubjectService interface {
 	UpdateCount(ctx context.Context, rootId, subjectId, fatherId string, count int64)
-	GetCommentSubject(ctx context.Context, req *gencomment.GetCommentSubjectReq) (resp *gencomment.GetCommentSubjectResp, err error)
-	CreateCommentSubject(ctx context.Context, req *gencomment.CreateCommentSubjectReq) (resp *gencomment.CreateCommentSubjectResp, err error)
-	UpdateCommentSubject(ctx context.Context, req *gencomment.UpdateCommentSubjectReq) (resp *gencomment.UpdateCommentSubjectResp, err error)
-	DeleteCommentSubject(ctx context.Context, req *gencomment.DeleteCommentSubjectReq) (resp *gencomment.DeleteCommentSubjectResp, err error)
+	GetCommentSubject(ctx context.Context, req *platform.GetCommentSubjectReq) (resp *platform.GetCommentSubjectResp, err error)
+	CreateCommentSubject(ctx context.Context, req *platform.CreateCommentSubjectReq) (resp *platform.CreateCommentSubjectResp, err error)
+	UpdateCommentSubject(ctx context.Context, req *platform.UpdateCommentSubjectReq) (resp *platform.UpdateCommentSubjectResp, err error)
+	DeleteCommentSubject(ctx context.Context, req *platform.DeleteCommentSubjectReq) (resp *platform.DeleteCommentSubjectResp, err error)
 }
 
 type SubjectService struct {
@@ -34,10 +33,9 @@ var SubjectSet = wire.NewSet(
 	wire.Bind(new(ISubjectService), new(*SubjectService)),
 )
 
-func (s *SubjectService) GetCommentSubject(ctx context.Context, req *gencomment.GetCommentSubjectReq) (resp *gencomment.GetCommentSubjectResp, err error) {
-	resp = new(gencomment.GetCommentSubjectResp)
+func (s *SubjectService) GetCommentSubject(ctx context.Context, req *platform.GetCommentSubjectReq) (resp *platform.GetCommentSubjectResp, err error) {
+	resp = new(platform.GetCommentSubjectResp)
 	var data *subjectMapper.Subject
-	fmt.Printf("[%v]\n", req.Id)
 	if data, err = s.SubjectMongoMapper.FindOne(ctx, req.Id); err != nil {
 		log.CtxError(ctx, "获取评论区详情 失败[%v]\n", err)
 		return resp, err
@@ -46,8 +44,8 @@ func (s *SubjectService) GetCommentSubject(ctx context.Context, req *gencomment.
 	return resp, nil
 }
 
-func (s *SubjectService) CreateCommentSubject(ctx context.Context, req *gencomment.CreateCommentSubjectReq) (resp *gencomment.CreateCommentSubjectResp, err error) {
-	resp = new(gencomment.CreateCommentSubjectResp)
+func (s *SubjectService) CreateCommentSubject(ctx context.Context, req *platform.CreateCommentSubjectReq) (resp *platform.CreateCommentSubjectResp, err error) {
+	resp = new(platform.CreateCommentSubjectResp)
 	data := convertor.SubjectToSubjectMapper(req.Subject)
 	if resp.Id, err = s.SubjectMongoMapper.Insert(ctx, data); err != nil {
 		log.CtxError(ctx, "创建评论区 失败[%v]\n", err)
@@ -70,8 +68,8 @@ func (s *SubjectService) UpdateCount(ctx context.Context, rootId, subjectId, fat
 	}
 }
 
-func (s *SubjectService) UpdateCommentSubject(ctx context.Context, req *gencomment.UpdateCommentSubjectReq) (resp *gencomment.UpdateCommentSubjectResp, err error) {
-	resp = new(gencomment.UpdateCommentSubjectResp)
+func (s *SubjectService) UpdateCommentSubject(ctx context.Context, req *platform.UpdateCommentSubjectReq) (resp *platform.UpdateCommentSubjectResp, err error) {
+	resp = new(platform.UpdateCommentSubjectResp)
 	data := convertor.SubjectToSubjectMapper(req.Subject)
 	if _, err = s.SubjectMongoMapper.Update(ctx, data); err != nil {
 		log.CtxError(ctx, "修改评论区信息 失败[%v]\n", err)
@@ -80,22 +78,19 @@ func (s *SubjectService) UpdateCommentSubject(ctx context.Context, req *gencomme
 	return resp, nil
 }
 
-func (s *SubjectService) DeleteCommentSubject(ctx context.Context, req *gencomment.DeleteCommentSubjectReq) (resp *gencomment.DeleteCommentSubjectResp, err error) {
-	resp = new(gencomment.DeleteCommentSubjectResp)
+func (s *SubjectService) DeleteCommentSubject(ctx context.Context, req *platform.DeleteCommentSubjectReq) (resp *platform.DeleteCommentSubjectResp, err error) {
+	resp = new(platform.DeleteCommentSubjectResp)
 	if _, err = s.SubjectMongoMapper.Delete(ctx, req.Id); err != nil {
 		log.CtxError(ctx, "删除评论区 失败[%v]\n", err)
 		return resp, err
 	}
-
 	// 发送删除评论区关联文件的消息
 	data, _ := sonic.Marshal(&message.DeleteCommentRelationsMessage{
 		FromType: int64(gencontent.TargetType_UserType),
 		FromId:   req.UserId,
 	})
-
 	if err2 := s.DeleteFileRelationKq.Push(pconvertor.Bytes2String(data)); err2 != nil {
 		return resp, err2
 	}
-
 	return resp, nil
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/CloudStriver/go-pkg/utils/pagination"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/config"
-	genrelation "github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform/relation"
+	"github.com/CloudStriver/platform/biz/infrastructure/config"
+	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/zeromicro/go-zero/core/mr"
 	"github.com/zeromicro/go-zero/core/trace"
@@ -20,16 +20,16 @@ var _ RelationNeo4jMapper = (*Neo4jMapper)(nil)
 
 type (
 	RelationNeo4jMapper interface {
-		CreateEdge(ctx context.Context, relation *genrelation.Relation) error
-		MatchEdge(ctx context.Context, relation *genrelation.Relation) (bool, error)
-		DeleteEdge(ctx context.Context, relation *genrelation.Relation) error
-		MatchFromEdges(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, error)
-		MatchToEdges(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, error)
+		CreateEdge(ctx context.Context, relation *platform.Relation) error
+		MatchEdge(ctx context.Context, relation *platform.Relation) (bool, error)
+		DeleteEdge(ctx context.Context, relation *platform.Relation) error
+		MatchFromEdges(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, error)
+		MatchToEdges(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, error)
 		MatchFromEdgesCount(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64) (int64, error)
 		MatchToEdgesCount(ctx context.Context, toType int64, toId string, fromType int64, relationType int64) (int64, error)
-		MatchFromEdgesAndCount(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, int64, error)
-		MatchToEdgesAndCount(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, int64, error)
-		GetRelationPaths(ctx context.Context, fromType int64, fromId string, type1 int64, type2 int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, error)
+		MatchFromEdgesAndCount(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, int64, error)
+		MatchToEdgesAndCount(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, int64, error)
+		GetRelationPaths(ctx context.Context, fromType int64, fromId string, type1 int64, type2 int64, options *pagination.PaginationOptions) ([]*platform.Relation, error)
 		DeleteNode(ctx context.Context, fromId string, fromType int64) error
 	}
 	Neo4jMapper struct {
@@ -57,7 +57,7 @@ func (n *Neo4jMapper) DeleteNode(ctx context.Context, fromId string, fromType in
 	return nil
 }
 
-func (n *Neo4jMapper) GetRelationPaths(ctx context.Context, fromType int64, fromId string, type1 int64, type2 int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, error) {
+func (n *Neo4jMapper) GetRelationPaths(ctx context.Context, fromType int64, fromId string, type1 int64, type2 int64, options *pagination.PaginationOptions) ([]*platform.Relation, error) {
 	options.EnsureSafe()
 	result, err := neo4j.ExecuteQuery(ctx, n.conn, "MATCH path=(node1:node {name: $FromId, type: $FromType})-[r1:edge {type: $Type1}]->(node2:node)-[r2:edge {type: $Type2}]->(node3:node) RETURN node2,node3,r2 ORDER BY r2.createTime DESC SKIP $Offset LIMIT $Limit",
 		map[string]any{
@@ -73,7 +73,7 @@ func (n *Neo4jMapper) GetRelationPaths(ctx context.Context, fromType int64, from
 		log.CtxError(ctx, "查询关系异常[%v]\n", err)
 		return nil, err
 	}
-	relation := make([]*genrelation.Relation, 0, len(result.Records))
+	relation := make([]*platform.Relation, 0, len(result.Records))
 	for i := range result.Records {
 		relationNode, _, err := neo4j.GetRecordValue[neo4j.Relationship](result.Records[i], "r2")
 		if err != nil {
@@ -119,7 +119,7 @@ func (n *Neo4jMapper) GetRelationPaths(ctx context.Context, fromType int64, from
 			return nil, err
 		}
 
-		relation = append(relation, &genrelation.Relation{
+		relation = append(relation, &platform.Relation{
 			FromType:     fromType,
 			FromId:       fromId,
 			ToType:       toType,
@@ -131,9 +131,9 @@ func (n *Neo4jMapper) GetRelationPaths(ctx context.Context, fromType int64, from
 	return relation, nil
 }
 
-func (n *Neo4jMapper) MatchFromEdgesAndCount(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, int64, error) {
+func (n *Neo4jMapper) MatchFromEdgesAndCount(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, int64, error) {
 	options.EnsureSafe()
-	relation := make([]*genrelation.Relation, 0, *options.Limit)
+	relation := make([]*platform.Relation, 0, *options.Limit)
 	var (
 		count           int64
 		err, err1, err2 error
@@ -158,9 +158,9 @@ func (n *Neo4jMapper) MatchFromEdgesAndCount(ctx context.Context, fromType int64
 	return relation, count, nil
 }
 
-func (n *Neo4jMapper) MatchToEdgesAndCount(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, int64, error) {
+func (n *Neo4jMapper) MatchToEdgesAndCount(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, int64, error) {
 	options.EnsureSafe()
-	relation := make([]*genrelation.Relation, 0, *options.Limit)
+	relation := make([]*platform.Relation, 0, *options.Limit)
 	var count int64
 	var err error
 	if err = mr.Finish(func() error {
@@ -228,7 +228,7 @@ func (n *Neo4jMapper) MatchToEdgesCount(ctx context.Context, toType int64, toId 
 	return count, nil
 }
 
-func (n *Neo4jMapper) MatchFromEdges(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, error) {
+func (n *Neo4jMapper) MatchFromEdges(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "neo4j.MatchFromEdges", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
@@ -249,7 +249,7 @@ func (n *Neo4jMapper) MatchFromEdges(ctx context.Context, fromType int64, fromId
 		return nil, err
 	}
 
-	relation := make([]*genrelation.Relation, 0, len(result.Records))
+	relation := make([]*platform.Relation, 0, len(result.Records))
 	for i := range result.Records {
 		relationNode, _, err := neo4j.GetRecordValue[neo4j.Relationship](result.Records[i], "r")
 		if err != nil {
@@ -275,7 +275,7 @@ func (n *Neo4jMapper) MatchFromEdges(ctx context.Context, fromType int64, fromId
 			return nil, err
 		}
 
-		relation = append(relation, &genrelation.Relation{
+		relation = append(relation, &platform.Relation{
 			ToType:       toType,
 			ToId:         toId,
 			FromType:     fromType,
@@ -287,7 +287,7 @@ func (n *Neo4jMapper) MatchFromEdges(ctx context.Context, fromType int64, fromId
 	return relation, nil
 }
 
-func (n *Neo4jMapper) MatchToEdges(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*genrelation.Relation, error) {
+func (n *Neo4jMapper) MatchToEdges(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "neo4j.MatchToEdges", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
@@ -307,7 +307,7 @@ func (n *Neo4jMapper) MatchToEdges(ctx context.Context, toType int64, toId strin
 		log.CtxError(ctx, "查询关系异常[%v]\n", err)
 		return nil, err
 	}
-	relation := make([]*genrelation.Relation, 0, len(result.Records))
+	relation := make([]*platform.Relation, 0, len(result.Records))
 	for i := range result.Records {
 		relationNode, _, err := neo4j.GetRecordValue[neo4j.Relationship](result.Records[i], "r")
 		if err != nil {
@@ -332,7 +332,7 @@ func (n *Neo4jMapper) MatchToEdges(ctx context.Context, toType int64, toId strin
 			return nil, err
 		}
 
-		relation = append(relation, &genrelation.Relation{
+		relation = append(relation, &platform.Relation{
 			FromType:     fromType,
 			FromId:       fromId,
 			ToType:       toType,
@@ -344,7 +344,7 @@ func (n *Neo4jMapper) MatchToEdges(ctx context.Context, toType int64, toId strin
 	return relation, nil
 }
 
-func (n *Neo4jMapper) CreateEdge(ctx context.Context, relation *genrelation.Relation) error {
+func (n *Neo4jMapper) CreateEdge(ctx context.Context, relation *platform.Relation) error {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "neo4j.CreateEdge", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
@@ -364,7 +364,7 @@ func (n *Neo4jMapper) CreateEdge(ctx context.Context, relation *genrelation.Rela
 	return nil
 }
 
-func (n *Neo4jMapper) MatchEdge(ctx context.Context, relation *genrelation.Relation) (bool, error) {
+func (n *Neo4jMapper) MatchEdge(ctx context.Context, relation *platform.Relation) (bool, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "neo4j.MatchEdge", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
@@ -385,7 +385,7 @@ func (n *Neo4jMapper) MatchEdge(ctx context.Context, relation *genrelation.Relat
 	return len(result.Records) != 0, nil
 }
 
-func (n *Neo4jMapper) DeleteEdge(ctx context.Context, relation *genrelation.Relation) error {
+func (n *Neo4jMapper) DeleteEdge(ctx context.Context, relation *platform.Relation) error {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "neo4j.DeleteEdge", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()

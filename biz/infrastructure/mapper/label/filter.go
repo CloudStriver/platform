@@ -1,7 +1,7 @@
 package label
 
 import (
-	"github.com/CloudStriver/platform-comment/biz/infrastructure/consts"
+	"github.com/CloudStriver/platform/biz/infrastructure/consts"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
