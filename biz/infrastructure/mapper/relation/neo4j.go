@@ -30,7 +30,7 @@ type (
 		MatchFromEdgesAndCount(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, int64, error)
 		MatchToEdgesAndCount(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, int64, error)
 		GetRelationPaths(ctx context.Context, fromType int64, fromId string, type1 int64, type2 int64, options *pagination.PaginationOptions) ([]*platform.Relation, error)
-		GetRelationPathsCount(ctx context.Context, fromType1 int64, fromId1 string, fromType2 int64, fromId2 string, type1 int64, type2 int64, toType int64) (int64, error)
+		GetRelationPathsCount(ctx context.Context, fromType1 int64, fromId1 string, fromType2 int64, type1 int64, type2 int64, toType int64) (int64, error)
 		DeleteNode(ctx context.Context, fromId string, fromType int64) error
 	}
 	Neo4jMapper struct {
@@ -39,7 +39,7 @@ type (
 	}
 )
 
-func (n *Neo4jMapper) GetRelationPathsCount(ctx context.Context, fromType1 int64, fromId1 string, fromType2 int64, fromId2 string, type1 int64, type2 int64, toType int64) (int64, error) {
+func (n *Neo4jMapper) GetRelationPathsCount(ctx context.Context, fromType1 int64, fromId1 string, fromType2 int64, type1 int64, type2 int64, toType int64) (int64, error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "neo4j.GetRelationPathsCount", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
@@ -47,7 +47,6 @@ func (n *Neo4jMapper) GetRelationPathsCount(ctx context.Context, fromType1 int64
 		map[string]any{
 			"FromId1":   fromId1,
 			"FromType1": fromType1,
-			"FromId2":   fromId2,
 			"FromType2": fromType2,
 			"ToType":    toType,
 			"Type1":     type1,

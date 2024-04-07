@@ -34,7 +34,7 @@ type RelationServiceImpl struct {
 
 func (s *RelationServiceImpl) GetRelationPathsCount(ctx context.Context, req *platform.GetRelationPathsCountReq) (resp *platform.GetRelationPathsCountResp, err error) {
 	resp = new(platform.GetRelationPathsCountResp)
-	resp.Total, err = s.RelationModel.GetRelationPathsCount(ctx, req.FromType1, req.FromId1, req.FromType2, req.FromId2, req.EdgeType1, req.EdgeType2, req.ToType)
+	resp.Total, err = s.RelationModel.GetRelationPathsCount(ctx, req.FromType1, req.FromId1, req.FromType2, req.EdgeType1, req.EdgeType2, req.ToType)
 	if err != nil {
 		return resp, err
 	}
