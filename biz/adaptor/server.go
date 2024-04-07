@@ -17,6 +17,10 @@ type PlatformServerImpl struct {
 	RelationService service.RelationService
 }
 
+func (s *PlatformServerImpl) GetRelationPathsCount(ctx context.Context, req *platform.GetRelationPathsCountReq) (res *platform.GetRelationPathsCountResp, err error) {
+	return s.RelationService.GetRelationPathsCount(ctx, req)
+}
+
 func (s *PlatformServerImpl) DeleteNode(ctx context.Context, req *platform.DeleteNodeReq) (res *platform.DeleteNodeResp, err error) {
 	return s.RelationService.DeleteNode(ctx, req)
 }

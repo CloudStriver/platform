@@ -30,6 +30,7 @@ type (
 		MatchFromEdgesAndCount(ctx context.Context, fromType int64, fromId string, toType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, int64, error)
 		MatchToEdgesAndCount(ctx context.Context, toType int64, toId string, fromType int64, relationType int64, options *pagination.PaginationOptions) ([]*platform.Relation, int64, error)
 		GetRelationPaths(ctx context.Context, fromType int64, fromId string, type1 int64, type2 int64, options *pagination.PaginationOptions) ([]*platform.Relation, error)
+		GetRelationPathsCount(ctx context.Context, fromType1 int64, fromId1 string, fromType2 int64, fromId2 string, type1 int64, type2 int64, toType int64) (int64, error)
 		DeleteNode(ctx context.Context, fromId string, fromType int64) error
 	}
 	Neo4jMapper struct {
@@ -37,6 +38,32 @@ type (
 		DataBase string
 	}
 )
+
+func (n *Neo4jMapper) GetRelationPathsCount(ctx context.Context, fromType1 int64, fromId1 string, fromType2 int64, fromId2 string, type1 int64, type2 int64, toType int64) (int64, error) {
+	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
+	_, span := tracer.Start(ctx, "neo4j.GetRelationPathsCount", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	defer span.End()
+	result, err := neo4j.ExecuteQuery(ctx, n.conn, "MATCH path=(node1:node {name: $FromId1, type: $FromType1})-[r1:edge {type: $Type1}]->(node3:node{type: $ToType})<-[r2:edge {type: $Type2}]-(node2:node{name: $FromId2, type: $FromType2}) RETURN COUNT(*) as patternCount",
+		map[string]any{
+			"FromId1":   fromId1,
+			"FromType1": fromType1,
+			"FromId2":   fromId2,
+			"FromType2": fromType2,
+			"ToType":    toType,
+			"Type1":     type1,
+			"Type2":     type2,
+		},
+		neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase(n.DataBase))
+	if err != nil {
+		log.CtxError(ctx, "查询关系异常[%v]\n", err)
+		return 0, err
+	}
+	count, _, err := neo4j.GetRecordValue[int64](result.Records[0], "patternCount")
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
 
 func (n *Neo4jMapper) DeleteNode(ctx context.Context, fromId string, fromType int64) error {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
