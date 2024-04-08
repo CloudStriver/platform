@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/CloudStriver/go-pkg v0.0.0-20240206060942-84060a3dd273
-	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240408075548-87cb35818728 // indirect
+	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240408075548-87cb35818728
 	github.com/bytedance/sonic v1.10.2
 	github.com/cloudwego/kitex v0.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
@@ -23,7 +23,12 @@ require (
 //replace github.com/CloudStriver/cloudmind-mq => ../cloudmind-mq
 
 require (
-	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240406130428-3a00c4159388 // indirect
+	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240406130428-3a00c4159388
+	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
+	github.com/zeromicro/go-queue v1.1.8
+)
+
+require (
 	github.com/apache/thrift v0.16.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.7.1 // indirect
@@ -57,7 +62,6 @@ require (
 	github.com/jhump/protoreflect v1.15.4 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kitex-contrib/monitor-prometheus v0.2.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -67,7 +71,6 @@ require (
 	github.com/modern-go/gls v0.0.0-20220109145502-612d0167dce5 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
-	github.com/neo4j/neo4j-go-driver/v5 v5.19.0 // indirect
 	github.com/oleiade/lane v1.0.1 // indirect
 	github.com/openzipkin/zipkin-go v0.4.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
@@ -88,7 +91,6 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	github.com/zeromicro/go-queue v1.1.8 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.19.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.19.0 // indirect
