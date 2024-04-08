@@ -6,13 +6,14 @@ import (
 	"github.com/CloudStriver/go-pkg/utils/pconvertor"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
 	"github.com/CloudStriver/platform/biz/infrastructure/consts"
-	"github.com/CloudStriver/platform/biz/infrastructure/convertor"
 	"github.com/CloudStriver/platform/biz/infrastructure/kq"
 	subjectMapper "github.com/CloudStriver/platform/biz/infrastructure/mapper/subject"
 	gencontent "github.com/CloudStriver/service-idl-gen-go/kitex_gen/cloudmind/content"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/bytedance/sonic"
 	"github.com/google/wire"
+	"github.com/samber/lo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ISubjectService interface {
@@ -40,14 +41,33 @@ func (s *SubjectService) GetCommentSubject(ctx context.Context, req *platform.Ge
 		log.CtxError(ctx, "获取评论区详情 失败[%v]\n", err)
 		return resp, err
 	}
-	resp.Subject = convertor.SubjectMapperToSubjectDetail(data)
+
+	resp = &platform.GetCommentSubjectResp{
+		UserId:       data.UserId,
+		TopCommentId: *data.TopCommentId,
+		RootCount:    *data.RootCount,
+		AllCount:     *data.AllCount,
+		State:        data.State,
+		Attrs:        data.Attrs,
+	}
 	return resp, nil
 }
 
 func (s *SubjectService) CreateCommentSubject(ctx context.Context, req *platform.CreateCommentSubjectReq) (resp *platform.CreateCommentSubjectResp, err error) {
 	resp = new(platform.CreateCommentSubjectResp)
-	data := convertor.SubjectToSubjectMapper(req.Subject)
-	if resp.Id, err = s.SubjectMongoMapper.Insert(ctx, data); err != nil {
+	var oid primitive.ObjectID
+	if oid, err = primitive.ObjectIDFromHex(req.Id); err != nil {
+		return resp, err
+	}
+	if _, err = s.SubjectMongoMapper.Insert(ctx, &subjectMapper.Subject{
+		ID:           oid,
+		UserId:       req.UserId,
+		TopCommentId: nil,
+		RootCount:    lo.ToPtr(int64(0)),
+		AllCount:     lo.ToPtr(int64(0)),
+		State:        int64(platform.State_Normal),
+		Attrs:        int64(platform.Attrs_None),
+	}); err != nil {
 		log.CtxError(ctx, "创建评论区 失败[%v]\n", err)
 		return resp, err
 	}
@@ -70,8 +90,18 @@ func (s *SubjectService) UpdateCount(ctx context.Context, rootId, subjectId, fat
 
 func (s *SubjectService) UpdateCommentSubject(ctx context.Context, req *platform.UpdateCommentSubjectReq) (resp *platform.UpdateCommentSubjectResp, err error) {
 	resp = new(platform.UpdateCommentSubjectResp)
-	data := convertor.SubjectToSubjectMapper(req.Subject)
-	if _, err = s.SubjectMongoMapper.Update(ctx, data); err != nil {
+	var oid primitive.ObjectID
+	if oid, err = primitive.ObjectIDFromHex(req.Id); err != nil {
+		return resp, err
+	}
+	if _, err = s.SubjectMongoMapper.Update(ctx, &subjectMapper.Subject{
+		ID:           oid,
+		TopCommentId: nil,
+		RootCount:    req.RootCount,
+		AllCount:     req.AllCount,
+		State:        req.State,
+		Attrs:        req.Attrs,
+	}); err != nil {
 		log.CtxError(ctx, "修改评论区信息 失败[%v]\n", err)
 		return resp, err
 	}

@@ -6,8 +6,7 @@ import (
 )
 
 type FilterOptions struct {
-	OnlyZone    *string
-	OnlySubZone *string
+	OnlyFatherId *string
 }
 
 type MongoIndexFilter struct {
@@ -23,19 +22,12 @@ func makeMongoFilter(opts *FilterOptions) bson.M {
 }
 
 func (f *MongoIndexFilter) toBson() bson.M {
-	f.CheckOnlyZone()
-	f.CheckOnlySubZone()
+	f.CheckOnlyFatherId()
 	return f.M
 }
 
-func (f *MongoIndexFilter) CheckOnlyZone() {
-	if f.OnlyZone != nil {
-		f.M[consts.Zone] = *f.OnlyZone
-	}
-}
-
-func (f *MongoIndexFilter) CheckOnlySubZone() {
-	if f.OnlySubZone != nil {
-		f.M[consts.SubZone] = *f.OnlySubZone
+func (f *MongoIndexFilter) CheckOnlyFatherId() {
+	if f.OnlyFatherId != nil {
+		f.M[consts.FatherId] = *f.OnlyFatherId
 	}
 }

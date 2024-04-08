@@ -66,10 +66,10 @@ func (c *PlatformServerImpl) CreateComment(ctx context.Context, req *platform.Cr
 		return res, err
 	}
 	_ = mr.Finish(func() error {
-		c.CommentService.UpdateCount(ctx, req.Comment.RootId, req.Comment.SubjectId, req.Comment.FatherId, consts.Increment)
+		c.CommentService.UpdateCount(ctx, req.RootId, req.SubjectId, req.FatherId, consts.Increment)
 		return nil
 	}, func() error {
-		c.SubjectService.UpdateCount(ctx, req.Comment.RootId, req.Comment.SubjectId, req.Comment.FatherId, consts.Increment)
+		c.SubjectService.UpdateCount(ctx, req.RootId, req.SubjectId, req.FatherId, consts.Increment)
 		return nil
 	})
 	return res, nil
@@ -81,17 +81,17 @@ func (c *PlatformServerImpl) UpdateComment(ctx context.Context, req *platform.Up
 
 func (c *PlatformServerImpl) DeleteComment(ctx context.Context, req *platform.DeleteCommentReq) (res *platform.DeleteCommentResp, err error) {
 	var data *platform.GetCommentResp
-	if data, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{CommentId: req.Id}); err != nil {
+	if data, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{Id: req.Id}); err != nil {
 		return res, err
 	}
 	if res, err = c.CommentService.DeleteComment(ctx, req); err != nil {
 		return res, err
 	}
 	_ = mr.Finish(func() error {
-		c.CommentService.UpdateCount(ctx, data.Comment.RootId, data.Comment.SubjectId, data.Comment.FatherId, consts.Decrement)
+		c.CommentService.UpdateCount(ctx, data.RootId, data.SubjectId, data.FatherId, consts.Decrement)
 		return nil
 	}, func() error {
-		c.SubjectService.UpdateCount(ctx, data.Comment.RootId, data.Comment.SubjectId, data.Comment.FatherId, consts.Decrement)
+		c.SubjectService.UpdateCount(ctx, data.RootId, data.SubjectId, data.FatherId, consts.Decrement)
 		return nil
 	})
 	return res, nil
