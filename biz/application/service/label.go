@@ -10,6 +10,7 @@ import (
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/google/wire"
 	"github.com/samber/lo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ILabelService interface {
@@ -34,7 +35,11 @@ var LabelSet = wire.NewSet(
 func (s *LabelService) CreateLabel(ctx context.Context, req *platform.CreateLabelReq) (resp *platform.CreateLabelResp, err error) {
 	resp = new(platform.CreateLabelResp)
 	var id string
-	if id, err = s.LabelMongoMapper.Insert(ctx, convertor.LabelToLabelMapper(req.Label)); err != nil {
+	if id, err = s.LabelMongoMapper.Insert(ctx, &labelMapper.Label{
+		ID:       primitive.NilObjectID,
+		FatherId: req.FatherId,
+		Value:    req.Value,
+	}); err != nil {
 		log.CtxError(ctx, "创建标签 失败[%v]\n", err)
 		return resp, err
 	}
@@ -58,13 +63,21 @@ func (s *LabelService) GetLabel(ctx context.Context, req *platform.GetLabelReq) 
 		log.CtxError(ctx, "获取标签 失败[%v]\n", err)
 		return resp, err
 	}
-	resp.Label = label.Value
+	resp.Value = label.Value
 	return resp, nil
 }
 
 func (s *LabelService) UpdateLabel(ctx context.Context, req *platform.UpdateLabelReq) (resp *platform.UpdateLabelResp, err error) {
 	resp = new(platform.UpdateLabelResp)
-	if _, err = s.LabelMongoMapper.Update(ctx, convertor.LabelToLabelMapper(req.Label)); err != nil {
+	var oid primitive.ObjectID
+	if oid, err = primitive.ObjectIDFromHex(req.Id); err != nil {
+		return resp, err
+	}
+	if _, err = s.LabelMongoMapper.Update(ctx, &labelMapper.Label{
+		ID:       oid,
+		FatherId: req.FatherId,
+		Value:    req.Value,
+	}); err != nil {
 		log.CtxError(ctx, "获取标签 失败[%v]\n", err)
 		return resp, err
 	}
@@ -77,22 +90,22 @@ func (s *LabelService) GetLabels(ctx context.Context, req *platform.GetLabelsReq
 	var labels []*labelMapper.Label
 	p := convertor.ParsePagination(req.Pagination)
 
-	if req.FilterOptions.Key != nil {
+	if req.Key != nil {
 		switch {
-		case *req.FilterOptions.Key == "":
-			fopts := convertor.LabelFilterOptionsToFilterOptions(req.FilterOptions)
+		case *req.Key == "":
+			fopts := &labelMapper.FilterOptions{OnlyFatherId: req.FatherId}
 			if labels, total, err = s.LabelMongoMapper.FindManyAndCount(ctx, fopts, p, mongop.IdCursorType); err != nil {
 				log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 				return resp, err
 			}
-		case *req.FilterOptions.Key != "":
-			if labels, total, err = s.LabelEsMapper.Search(ctx, convertor.ConvertLabelAllFieldsSearchQuery(*req.FilterOptions.Key), p, esp.ScoreCursorType); err != nil {
+		case *req.Key != "":
+			if labels, total, err = s.LabelEsMapper.Search(ctx, convertor.ConvertLabelAllFieldsSearchQuery(*req.Key), p, esp.ScoreCursorType); err != nil {
 				log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 				return resp, err
 			}
 		}
 	} else {
-		fopts := convertor.LabelFilterOptionsToFilterOptions(req.FilterOptions)
+		fopts := &labelMapper.FilterOptions{OnlyFatherId: req.FatherId}
 		if labels, total, err = s.LabelMongoMapper.FindManyAndCount(ctx, fopts, p, mongop.IdCursorType); err != nil {
 			log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 			return resp, err
@@ -112,7 +125,7 @@ func (s *LabelService) GetLabels(ctx context.Context, req *platform.GetLabelsReq
 func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *platform.GetLabelsInBatchReq) (resp *platform.GetLabelsInBatchResp, err error) {
 	resp = new(platform.GetLabelsInBatchResp)
 	var labels []*labelMapper.Label
-	if labels, err = s.LabelMongoMapper.FindManyByIds(ctx, req.LabelIds); err != nil {
+	if labels, err = s.LabelMongoMapper.FindManyByIds(ctx, req.Ids); err != nil {
 		log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 		return resp, err
 	}
@@ -124,7 +137,7 @@ func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *platform.GetLa
 	}
 
 	// 按req.LabelIds中的ID顺序映射和转换
-	resp.Labels = lo.Map(req.LabelIds, func(id string, _ int) string {
+	resp.Labels = lo.Map(req.Ids, func(id string, _ int) string {
 		if label, ok := labelMap[id]; ok {
 			return label
 		}

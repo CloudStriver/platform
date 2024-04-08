@@ -42,9 +42,8 @@ type (
 
 	Label struct {
 		ID       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+		FatherId string             `bson:"fatherId,omitempty" json:"fatherId,omitempty"`
 		Value    string             `bson:"value,omitempty" json:"value,omitempty"`
-		Zone     string             `bson:"zone,omitempty" json:"zone,omitempty"`
-		SubZone  string             `bson:"subZone,omitempty" json:"subZone,omitempty"`
 		CreateAt time.Time          `bson:"createAt,omitempty" json:"createAt,omitempty"`
 		UpdateAt time.Time          `bson:"updateAt,omitempty" json:"updateAt,omitempty"`
 		Score_   float64            `bson:"score_,omitempty" json:"score_,omitempty"`

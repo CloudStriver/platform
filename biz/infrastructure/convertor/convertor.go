@@ -9,31 +9,10 @@ import (
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/basic"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-	"github.com/samber/lo"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CommentToCommentMapper(data *platform.Comment) *comment.Comment {
-	oid, _ := primitive.ObjectIDFromHex(data.Id)
-	return &comment.Comment{
-		ID:        oid,
-		UserId:    data.UserId,
-		AtUserId:  data.AtUserId,
-		SubjectId: data.SubjectId,
-		RootId:    data.RootId,
-		FatherId:  data.FatherId,
-		Content:   data.Content,
-		Meta:      data.Meta,
-		Labels:    data.Labels,
-		Count:     data.Count,
-		State:     data.State,
-		Attrs:     data.Attrs,
-		SortTime:  data.SortTime,
-	}
-}
-
-func CommentMapperToCommentInfo(data *comment.Comment) *platform.CommentInfo {
-	return &platform.CommentInfo{
+func CommentMapperToCommentInfo(data *comment.Comment) *platform.Comment {
+	return &platform.Comment{
 		Id:         data.ID.Hex(),
 		SubjectId:  data.SubjectId,
 		RootId:     data.RootId,
@@ -67,32 +46,8 @@ func CommentFilterOptionsToFilterOptions(data *platform.CommentFilterOptions) *c
 	}
 }
 
-func LabelFilterOptionsToFilterOptions(data *platform.LabelFilterOptions) *label.FilterOptions {
-	if data == nil {
-		return &label.FilterOptions{}
-	} else {
-		return &label.FilterOptions{
-			OnlyZone:    data.Zone,
-			OnlySubZone: data.SubZone,
-		}
-	}
-}
-
-func SubjectToSubjectMapper(data *platform.Subject) *subject.Subject {
-	oid, _ := primitive.ObjectIDFromHex(data.Id)
-	return &subject.Subject{
-		ID:           oid,
-		UserId:       data.UserId,
-		TopCommentId: lo.ToPtr(data.TopCommentId),
-		RootCount:    data.RootCount,
-		AllCount:     data.AllCount,
-		State:        data.State,
-		Attrs:        data.Attrs,
-	}
-}
-
-func SubjectMapperToSubjectDetail(data *subject.Subject) *platform.SubjectDetails {
-	return &platform.SubjectDetails{
+func SubjectMapperToSubjectDetail(data *subject.Subject) *platform.Subject {
+	return &platform.Subject{
 		Id:           data.ID.Hex(),
 		UserId:       data.UserId,
 		TopCommentId: *data.TopCommentId,
@@ -119,20 +74,9 @@ func ParsePagination(opts *basic.PaginationOptions) (p *pagination.PaginationOpt
 
 func LabelMapperToLabel(data *label.Label) *platform.Label {
 	return &platform.Label{
-		LabelId: data.ID.Hex(),
-		Zone:    data.Zone,
-		SubZone: data.SubZone,
-		Value:   data.Value,
-	}
-}
-
-func LabelToLabelMapper(data *platform.Label) *label.Label {
-	oid, _ := primitive.ObjectIDFromHex(data.LabelId)
-	return &label.Label{
-		ID:      oid,
-		Zone:    data.Zone,
-		SubZone: data.SubZone,
-		Value:   data.Value,
+		Id:       data.ID.Hex(),
+		FatherId: data.FatherId,
+		Value:    data.Value,
 	}
 }
 
