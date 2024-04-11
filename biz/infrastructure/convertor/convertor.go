@@ -36,7 +36,6 @@ func CommentFilterOptionsToFilterOptions(data *platform.CommentFilterOptions) *c
 		return &comment.FilterOptions{
 			OnlyUserId:    data.OnlyUserId,
 			OnlyAtUserId:  data.OnlyAtUserId,
-			OnlyCommentId: data.OnlyCommentId,
 			OnlySubjectId: data.OnlySubjectId,
 			OnlyRootId:    data.OnlyRootId,
 			OnlyFatherId:  data.OnlyFatherId,

@@ -10,7 +10,6 @@ import (
 type FilterOptions struct {
 	OnlyUserId     *string
 	OnlyAtUserId   *string
-	OnlyCommentId  *string
 	OnlySubjectId  *string
 	OnlyRootId     *string
 	OnlyFatherId   *string
@@ -34,7 +33,6 @@ func makeMongoFilter(opts *FilterOptions) bson.M {
 func (f *MongoIndexFilter) toBson() bson.M {
 	f.CheckOnlyUserId()
 	f.CheckOnlyAtUserId()
-	f.CheckOnlyCommentId()
 	f.CheckOnlySubjectId()
 	f.CheckOnlyRootId()
 	f.CheckOnlyFatherId()
@@ -63,13 +61,6 @@ func (f *MongoIndexFilter) CheckOnlyUserId() {
 func (f *MongoIndexFilter) CheckOnlyAtUserId() {
 	if f.OnlyAtUserId != nil {
 		f.M[consts.AtUserId] = *f.OnlyAtUserId
-	}
-}
-
-func (f *MongoIndexFilter) CheckOnlyCommentId() {
-	if f.OnlyCommentId != nil {
-		oid, _ := primitive.ObjectIDFromHex(*f.OnlyCommentId)
-		f.M[consts.ID] = oid
 	}
 }
 
