@@ -62,7 +62,7 @@ func (s *SubjectService) CreateCommentSubject(ctx context.Context, req *platform
 	if _, err = s.SubjectMongoMapper.Insert(ctx, &subjectMapper.Subject{
 		ID:           oid,
 		UserId:       req.UserId,
-		TopCommentId: nil,
+		TopCommentId: lo.ToPtr(""),
 		RootCount:    lo.ToPtr(int64(0)),
 		AllCount:     lo.ToPtr(int64(0)),
 		State:        int64(platform.State_Normal),
