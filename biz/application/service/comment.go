@@ -143,10 +143,10 @@ func (s *CommentService) GetCommentBlocks(ctx context.Context, req *platform.Get
 			log.CtxError(ctx, "获取评论列表 失败[%v]\n", err)
 			return resp, err
 		}
-		if p.LastToken != nil {
-			resp.Token = *p.LastToken
-		}
 		resp.CommentBlocks = make([]*platform.CommentBlock, 1)
+		resp.CommentBlocks[0] = &platform.CommentBlock{
+			ReplyList: &platform.ReplyList{},
+		}
 		if p.LastToken != nil {
 			resp.CommentBlocks[0].ReplyList.Token = *p.LastToken
 		}
