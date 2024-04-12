@@ -226,7 +226,8 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *platform.SetC
 	if subjectId, err = primitive.ObjectIDFromHex(req.SubjectId); err != nil {
 		return resp, err
 	}
-	if commentId, err = primitive.ObjectIDFromHex(req.CommentId); err != nil {
+
+  if commentId, err = primitive.ObjectIDFromHex(req.CommentId); err != nil {
 		return resp, err
 	}
 
