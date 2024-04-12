@@ -19,6 +19,7 @@ type ICommentService interface {
 	UpdateCount(ctx context.Context, rootId, subjectId, fatherId string, count int64)
 	GetComment(ctx context.Context, req *platform.GetCommentReq) (resp *platform.GetCommentResp, err error)
 	GetCommentList(ctx context.Context, req *platform.GetCommentListReq) (resp *platform.GetCommentListResp, err error)
+	GetCommentBlocks(ctx context.Context, req *platform.GetCommentBlocksReq) (resp *platform.GetCommentBlocksResp, err error)
 	CreateComment(ctx context.Context, req *platform.CreateCommentReq) (resp *platform.CreateCommentResp, err error)
 	UpdateComment(ctx context.Context, req *platform.UpdateCommentReq) (resp *platform.UpdateCommentResp, err error)
 	DeleteComment(ctx context.Context, req *platform.DeleteCommentReq) (resp *platform.DeleteCommentResp, err error)
@@ -72,8 +73,10 @@ func (s *CommentService) GetComment(ctx context.Context, req *platform.GetCommen
 
 func (s *CommentService) GetCommentList(ctx context.Context, req *platform.GetCommentListReq) (resp *platform.GetCommentListResp, err error) {
 	resp = new(platform.GetCommentListResp)
-	var total int64
-	var comments []*commentMapper.Comment
+	var (
+		total    int64
+		comments []*commentMapper.Comment
+	)
 
 	p := convertor.ParsePagination(req.Pagination)
 	filter := convertor.CommentFilterOptionsToFilterOptions(req.FilterOptions)
@@ -85,9 +88,73 @@ func (s *CommentService) GetCommentList(ctx context.Context, req *platform.GetCo
 		resp.Token = *p.LastToken
 	}
 	resp.Comments = lo.Map(comments, func(comment *commentMapper.Comment, _ int) *platform.Comment {
-		return convertor.CommentMapperToCommentInfo(comment)
+		return convertor.CommentMapperToComment(comment)
 	})
 	resp.Total = total
+	return resp, nil
+}
+
+func (s *CommentService) GetCommentBlocks(ctx context.Context, req *platform.GetCommentBlocksReq) (resp *platform.GetCommentBlocksResp, err error) {
+	resp = new(platform.GetCommentBlocksResp)
+
+	var (
+		total    int64
+		comments []*commentMapper.Comment
+		filter   *commentMapper.FilterOptions
+	)
+
+	p := convertor.ParsePagination(req.Pagination)
+	filter = &commentMapper.FilterOptions{OnlyFatherId: lo.ToPtr(req.FatherId)}
+	if req.FatherId == req.SubjectId {
+		if comments, total, err = s.CommentMongoMapper.FindManyAndCount(ctx, filter, p, sort.TimeCursorType); err != nil {
+			log.CtxError(ctx, "获取评论列表 失败[%v]\n", err)
+			return resp, err
+		}
+		if p.LastToken != nil {
+			resp.Token = *p.LastToken
+		}
+		resp.Total = total
+		resp.CommentBlocks = lo.Map(comments, func(comment *commentMapper.Comment, _ int) *platform.CommentBlock {
+			return &platform.CommentBlock{
+				RootComment: convertor.CommentMapperToComment(comment),
+				ReplyList:   &platform.ReplyList{},
+			}
+		})
+
+		for _, comment := range comments {
+			filter = &commentMapper.FilterOptions{OnlyFatherId: lo.ToPtr(comment.ID.Hex())}
+			if comments, total, err = s.CommentMongoMapper.FindManyAndCount(ctx, filter, p, sort.TimeCursorType); err != nil {
+				log.CtxError(ctx, "获取评论列表 失败[%v]\n", err)
+				return resp, err
+			}
+
+			for i := range resp.CommentBlocks {
+				if p.LastToken != nil {
+					resp.CommentBlocks[i].ReplyList.Token = *p.LastToken
+				}
+				resp.CommentBlocks[i].ReplyList.Total = total
+				resp.CommentBlocks[i].ReplyList.Comments = lo.Map(comments, func(comment *commentMapper.Comment, _ int) *platform.Comment {
+					return convertor.CommentMapperToComment(comment)
+				})
+			}
+		}
+	} else {
+		if comments, total, err = s.CommentMongoMapper.FindManyAndCount(ctx, filter, p, sort.TimeCursorType); err != nil {
+			log.CtxError(ctx, "获取评论列表 失败[%v]\n", err)
+			return resp, err
+		}
+		if p.LastToken != nil {
+			resp.Token = *p.LastToken
+		}
+		resp.CommentBlocks = make([]*platform.CommentBlock, 1)
+		if p.LastToken != nil {
+			resp.CommentBlocks[0].ReplyList.Token = *p.LastToken
+		}
+		resp.CommentBlocks[0].ReplyList.Total = total
+		resp.CommentBlocks[0].ReplyList.Comments = lo.Map(comments, func(comment *commentMapper.Comment, _ int) *platform.Comment {
+			return convertor.CommentMapperToComment(comment)
+		})
+	}
 	return resp, nil
 }
 
@@ -151,10 +218,6 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *platform.Delete
 
 func (s *CommentService) SetCommentAttrs(ctx context.Context, req *platform.SetCommentAttrsReq, res *platform.GetCommentSubjectResp) (resp *platform.SetCommentAttrsResp, err error) {
 	resp = new(platform.SetCommentAttrsResp)
-	if req.Attrs == int64(platform.Attrs_Pinned) || req.Attrs == int64(platform.Attrs_PinnedAndHighlighted) {
-		req.SortTime = math.MaxInt64 - 1
-	}
-
 	var (
 		subjectId primitive.ObjectID
 		commentId primitive.ObjectID
@@ -163,9 +226,15 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *platform.SetC
 	if subjectId, err = primitive.ObjectIDFromHex(req.SubjectId); err != nil {
 		return resp, err
 	}
-
 	if commentId, err = primitive.ObjectIDFromHex(req.CommentId); err != nil {
 		return resp, err
+	}
+
+	switch req.Attrs {
+	case int64(platform.Attrs_Pinned):
+		req.SortTime = math.MaxInt64 - 1
+	case int64(platform.Attrs_PinnedAndHighlighted):
+		req.SortTime = math.MaxInt64 - 1
 	}
 
 	data := &commentMapper.Comment{ID: commentId, Attrs: req.Attrs, SortTime: req.SortTime}

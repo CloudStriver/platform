@@ -10,8 +10,6 @@ import (
 type FilterOptions struct {
 	OnlyUserId     *string
 	OnlyAtUserId   *string
-	OnlySubjectId  *string
-	OnlyRootId     *string
 	OnlyFatherId   *string
 	OnlyCommentIds []string
 	OnlyState      *int64
@@ -33,8 +31,6 @@ func makeMongoFilter(opts *FilterOptions) bson.M {
 func (f *MongoIndexFilter) toBson() bson.M {
 	f.CheckOnlyUserId()
 	f.CheckOnlyAtUserId()
-	f.CheckOnlySubjectId()
-	f.CheckOnlyRootId()
 	f.CheckOnlyFatherId()
 	f.CheckOnlyState()
 	f.CheckOnlyAttrs()
@@ -58,27 +54,15 @@ func (f *MongoIndexFilter) CheckOnlyUserId() {
 	}
 }
 
-func (f *MongoIndexFilter) CheckOnlyAtUserId() {
-	if f.OnlyAtUserId != nil {
-		f.M[consts.AtUserId] = *f.OnlyAtUserId
-	}
-}
-
-func (f *MongoIndexFilter) CheckOnlySubjectId() {
-	if f.OnlySubjectId != nil {
-		f.M[consts.SubjectId] = *f.OnlySubjectId
-	}
-}
-
-func (f *MongoIndexFilter) CheckOnlyRootId() {
-	if f.OnlyRootId != nil {
-		f.M[consts.RootId] = *f.OnlyRootId
-	}
-}
-
 func (f *MongoIndexFilter) CheckOnlyFatherId() {
 	if f.OnlyFatherId != nil {
 		f.M[consts.FatherId] = *f.OnlyFatherId
+	}
+}
+
+func (f *MongoIndexFilter) CheckOnlyAtUserId() {
+	if f.OnlyAtUserId != nil {
+		f.M[consts.AtUserId] = *f.OnlyAtUserId
 	}
 }
 
