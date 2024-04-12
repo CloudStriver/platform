@@ -17,6 +17,10 @@ type PlatformServerImpl struct {
 	RelationService service.RelationService
 }
 
+func (s *PlatformServerImpl) GetCommentBlocks(ctx context.Context, req *platform.GetCommentBlocksReq) (res *platform.GetCommentBlocksResp, err error) {
+	return s.CommentService.GetCommentBlocks(ctx, req)
+}
+
 func (s *PlatformServerImpl) GetRelationPathsCount(ctx context.Context, req *platform.GetRelationPathsCountReq) (res *platform.GetRelationPathsCountResp, err error) {
 	return s.RelationService.GetRelationPathsCount(ctx, req)
 }

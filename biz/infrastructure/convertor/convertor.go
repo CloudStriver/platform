@@ -10,7 +10,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 )
 
-func CommentMapperToCommentInfo(data *comment.Comment) *platform.Comment {
+func CommentMapperToComment(data *comment.Comment) *platform.Comment {
 	return &platform.Comment{
 		CommentId:  data.ID.Hex(),
 		SubjectId:  data.SubjectId,
@@ -33,13 +33,10 @@ func CommentFilterOptionsToFilterOptions(data *platform.CommentFilterOptions) *c
 		return &comment.FilterOptions{}
 	} else {
 		return &comment.FilterOptions{
-			OnlyUserId:    data.OnlyUserId,
-			OnlyAtUserId:  data.OnlyAtUserId,
-			OnlySubjectId: data.OnlySubjectId,
-			OnlyRootId:    data.OnlyRootId,
-			OnlyFatherId:  data.OnlyFatherId,
-			OnlyState:     data.OnlyState,
-			OnlyAttrs:     data.OnlyAttrs,
+			OnlyUserId:   data.OnlyUserId,
+			OnlyAtUserId: data.OnlyAtUserId,
+			OnlyState:    data.OnlyState,
+			OnlyAttrs:    data.OnlyAttrs,
 		}
 	}
 }
