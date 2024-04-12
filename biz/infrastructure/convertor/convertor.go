@@ -5,7 +5,6 @@ import (
 	"github.com/CloudStriver/platform/biz/infrastructure/consts"
 	"github.com/CloudStriver/platform/biz/infrastructure/mapper/comment"
 	"github.com/CloudStriver/platform/biz/infrastructure/mapper/label"
-	"github.com/CloudStriver/platform/biz/infrastructure/mapper/subject"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/basic"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -13,7 +12,7 @@ import (
 
 func CommentMapperToCommentInfo(data *comment.Comment) *platform.Comment {
 	return &platform.Comment{
-		Id:         data.ID.Hex(),
+		CommentId:  data.ID.Hex(),
 		SubjectId:  data.SubjectId,
 		RootId:     data.RootId,
 		FatherId:   data.FatherId,
@@ -45,18 +44,6 @@ func CommentFilterOptionsToFilterOptions(data *platform.CommentFilterOptions) *c
 	}
 }
 
-func SubjectMapperToSubjectDetail(data *subject.Subject) *platform.Subject {
-	return &platform.Subject{
-		Id:           data.ID.Hex(),
-		UserId:       data.UserId,
-		TopCommentId: *data.TopCommentId,
-		RootCount:    *data.RootCount,
-		AllCount:     *data.AllCount,
-		State:        data.State,
-		Attrs:        data.Attrs,
-	}
-}
-
 func ParsePagination(opts *basic.PaginationOptions) (p *pagination.PaginationOptions) {
 	if opts == nil {
 		p = &pagination.PaginationOptions{}
@@ -73,7 +60,7 @@ func ParsePagination(opts *basic.PaginationOptions) (p *pagination.PaginationOpt
 
 func LabelMapperToLabel(data *label.Label) *platform.Label {
 	return &platform.Label{
-		Id:       data.ID.Hex(),
+		LabelId:  data.ID.Hex(),
 		FatherId: data.FatherId,
 		Value:    data.Value,
 	}
