@@ -43,13 +43,13 @@ func (s *LabelService) CreateLabel(ctx context.Context, req *platform.CreateLabe
 		log.CtxError(ctx, "创建标签 失败[%v]\n", err)
 		return resp, err
 	}
-	resp.Id = id
+	resp.LabelId = id
 	return resp, nil
 }
 
 func (s *LabelService) DeleteLabel(ctx context.Context, req *platform.DeleteLabelReq) (resp *platform.DeleteLabelResp, err error) {
 	resp = new(platform.DeleteLabelResp)
-	if _, err = s.LabelMongoMapper.Delete(ctx, req.Id); err != nil {
+	if _, err = s.LabelMongoMapper.Delete(ctx, req.LabelId); err != nil {
 		log.CtxError(ctx, "删除标签 失败[%v]\n", err)
 		return resp, err
 	}
@@ -59,7 +59,7 @@ func (s *LabelService) DeleteLabel(ctx context.Context, req *platform.DeleteLabe
 func (s *LabelService) GetLabel(ctx context.Context, req *platform.GetLabelReq) (resp *platform.GetLabelResp, err error) {
 	resp = new(platform.GetLabelResp)
 	var label *labelMapper.Label
-	if label, err = s.LabelMongoMapper.FindOne(ctx, req.Id); err != nil {
+	if label, err = s.LabelMongoMapper.FindOne(ctx, req.LabelId); err != nil {
 		log.CtxError(ctx, "获取标签 失败[%v]\n", err)
 		return resp, err
 	}
@@ -70,7 +70,7 @@ func (s *LabelService) GetLabel(ctx context.Context, req *platform.GetLabelReq) 
 func (s *LabelService) UpdateLabel(ctx context.Context, req *platform.UpdateLabelReq) (resp *platform.UpdateLabelResp, err error) {
 	resp = new(platform.UpdateLabelResp)
 	var oid primitive.ObjectID
-	if oid, err = primitive.ObjectIDFromHex(req.Id); err != nil {
+	if oid, err = primitive.ObjectIDFromHex(req.LabelId); err != nil {
 		return resp, err
 	}
 	if _, err = s.LabelMongoMapper.Update(ctx, &labelMapper.Label{
@@ -125,7 +125,7 @@ func (s *LabelService) GetLabels(ctx context.Context, req *platform.GetLabelsReq
 func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *platform.GetLabelsInBatchReq) (resp *platform.GetLabelsInBatchResp, err error) {
 	resp = new(platform.GetLabelsInBatchResp)
 	var labels []*labelMapper.Label
-	if labels, err = s.LabelMongoMapper.FindManyByIds(ctx, req.Ids); err != nil {
+	if labels, err = s.LabelMongoMapper.FindManyByIds(ctx, req.LabelIds); err != nil {
 		log.CtxError(ctx, "获取标签集 失败[%v]\n", err)
 		return resp, err
 	}
@@ -137,7 +137,7 @@ func (s *LabelService) GetLabelsInBatch(ctx context.Context, req *platform.GetLa
 	}
 
 	// 按req.LabelIds中的ID顺序映射和转换
-	resp.Labels = lo.Map(req.Ids, func(id string, _ int) string {
+	resp.Labels = lo.Map(req.LabelIds, func(id string, _ int) string {
 		if label, ok := labelMap[id]; ok {
 			return label
 		}

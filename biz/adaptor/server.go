@@ -81,7 +81,7 @@ func (c *PlatformServerImpl) UpdateComment(ctx context.Context, req *platform.Up
 
 func (c *PlatformServerImpl) DeleteComment(ctx context.Context, req *platform.DeleteCommentReq) (res *platform.DeleteCommentResp, err error) {
 	var data *platform.GetCommentResp
-	if data, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{Id: req.Id}); err != nil {
+	if data, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{CommentId: req.CommentId}); err != nil {
 		return res, err
 	}
 	if res, err = c.CommentService.DeleteComment(ctx, req); err != nil {
@@ -99,7 +99,7 @@ func (c *PlatformServerImpl) DeleteComment(ctx context.Context, req *platform.De
 
 func (c *PlatformServerImpl) SetCommentAttrs(ctx context.Context, req *platform.SetCommentAttrsReq) (res *platform.SetCommentAttrsResp, err error) {
 	var resp *platform.GetCommentSubjectResp
-	if resp, err = c.SubjectService.GetCommentSubject(ctx, &platform.GetCommentSubjectReq{Id: req.SubjectId}); err != nil {
+	if resp, err = c.SubjectService.GetCommentSubject(ctx, &platform.GetCommentSubjectReq{SubjectId: req.SubjectId}); err != nil {
 		return res, err
 	}
 	return c.CommentService.SetCommentAttrs(ctx, req, resp)

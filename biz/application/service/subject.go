@@ -37,7 +37,7 @@ var SubjectSet = wire.NewSet(
 func (s *SubjectService) GetCommentSubject(ctx context.Context, req *platform.GetCommentSubjectReq) (resp *platform.GetCommentSubjectResp, err error) {
 	resp = new(platform.GetCommentSubjectResp)
 	var data *subjectMapper.Subject
-	if data, err = s.SubjectMongoMapper.FindOne(ctx, req.Id); err != nil {
+	if data, err = s.SubjectMongoMapper.FindOne(ctx, req.SubjectId); err != nil {
 		log.CtxError(ctx, "获取评论区详情 失败[%v]\n", err)
 		return resp, err
 	}
@@ -56,7 +56,7 @@ func (s *SubjectService) GetCommentSubject(ctx context.Context, req *platform.Ge
 func (s *SubjectService) CreateCommentSubject(ctx context.Context, req *platform.CreateCommentSubjectReq) (resp *platform.CreateCommentSubjectResp, err error) {
 	resp = new(platform.CreateCommentSubjectResp)
 	var oid primitive.ObjectID
-	if oid, err = primitive.ObjectIDFromHex(req.Id); err != nil {
+	if oid, err = primitive.ObjectIDFromHex(req.SubjectId); err != nil {
 		return resp, err
 	}
 	if _, err = s.SubjectMongoMapper.Insert(ctx, &subjectMapper.Subject{
@@ -91,7 +91,7 @@ func (s *SubjectService) UpdateCount(ctx context.Context, rootId, subjectId, fat
 func (s *SubjectService) UpdateCommentSubject(ctx context.Context, req *platform.UpdateCommentSubjectReq) (resp *platform.UpdateCommentSubjectResp, err error) {
 	resp = new(platform.UpdateCommentSubjectResp)
 	var oid primitive.ObjectID
-	if oid, err = primitive.ObjectIDFromHex(req.Id); err != nil {
+	if oid, err = primitive.ObjectIDFromHex(req.SubjectId); err != nil {
 		return resp, err
 	}
 	if _, err = s.SubjectMongoMapper.Update(ctx, &subjectMapper.Subject{
@@ -110,7 +110,7 @@ func (s *SubjectService) UpdateCommentSubject(ctx context.Context, req *platform
 
 func (s *SubjectService) DeleteCommentSubject(ctx context.Context, req *platform.DeleteCommentSubjectReq) (resp *platform.DeleteCommentSubjectResp, err error) {
 	resp = new(platform.DeleteCommentSubjectResp)
-	if _, err = s.SubjectMongoMapper.Delete(ctx, req.Id); err != nil {
+	if _, err = s.SubjectMongoMapper.Delete(ctx, req.SubjectId); err != nil {
 		log.CtxError(ctx, "删除评论区 失败[%v]\n", err)
 		return resp, err
 	}

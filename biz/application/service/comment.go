@@ -38,7 +38,7 @@ var CommentSet = wire.NewSet(
 
 func (s *CommentService) DeleteCommentByIds(ctx context.Context, req *platform.DeleteCommentByIdsReq) (resp *platform.DeleteCommentByIdsResp, err error) {
 	resp = new(platform.DeleteCommentByIdsResp)
-	if _, err = s.CommentMongoMapper.DeleteMany(ctx, req.Ids); err != nil {
+	if _, err = s.CommentMongoMapper.DeleteMany(ctx, req.CommentIds); err != nil {
 		log.CtxError(ctx, "删除评论 失败[%v]\n", err)
 		return resp, err
 	}
@@ -48,7 +48,7 @@ func (s *CommentService) DeleteCommentByIds(ctx context.Context, req *platform.D
 func (s *CommentService) GetComment(ctx context.Context, req *platform.GetCommentReq) (resp *platform.GetCommentResp, err error) {
 	resp = new(platform.GetCommentResp)
 	var data *commentMapper.Comment
-	if data, err = s.CommentMongoMapper.FindOne(ctx, req.Id); err != nil {
+	if data, err = s.CommentMongoMapper.FindOne(ctx, req.CommentId); err != nil {
 		log.CtxError(ctx, "获取评论详情 失败[%v]\n", err)
 		return resp, err
 	}
@@ -93,7 +93,7 @@ func (s *CommentService) GetCommentList(ctx context.Context, req *platform.GetCo
 
 func (s *CommentService) CreateComment(ctx context.Context, req *platform.CreateCommentReq) (resp *platform.CreateCommentResp, err error) {
 	resp = new(platform.CreateCommentResp)
-	if resp.Id, err = s.CommentMongoMapper.Insert(ctx, &commentMapper.Comment{
+	if resp.CommentId, err = s.CommentMongoMapper.Insert(ctx, &commentMapper.Comment{
 		ID:        primitive.NilObjectID,
 		UserId:    req.UserId,
 		AtUserId:  req.AtUserId,
@@ -125,7 +125,7 @@ func (s *CommentService) UpdateCount(ctx context.Context, rootId, subjectId, fat
 func (s *CommentService) UpdateComment(ctx context.Context, req *platform.UpdateCommentReq) (resp *platform.UpdateCommentResp, err error) {
 	resp = new(platform.UpdateCommentResp)
 	var oid primitive.ObjectID
-	if oid, err = primitive.ObjectIDFromHex(req.Id); err != nil {
+	if oid, err = primitive.ObjectIDFromHex(req.CommentId); err != nil {
 		return resp, err
 	}
 	if _, err = s.CommentMongoMapper.Update(ctx, &commentMapper.Comment{
@@ -142,7 +142,7 @@ func (s *CommentService) UpdateComment(ctx context.Context, req *platform.Update
 
 func (s *CommentService) DeleteComment(ctx context.Context, req *platform.DeleteCommentReq) (resp *platform.DeleteCommentResp, err error) {
 	resp = new(platform.DeleteCommentResp)
-	if _, err = s.CommentMongoMapper.Delete(ctx, req.Id); err != nil {
+	if _, err = s.CommentMongoMapper.Delete(ctx, req.CommentId); err != nil {
 		log.CtxError(ctx, "删除评论 失败[%v]\n", err)
 		return resp, err
 	}
@@ -164,7 +164,7 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *platform.SetC
 		return resp, err
 	}
 
-	if commentId, err = primitive.ObjectIDFromHex(req.Id); err != nil {
+	if commentId, err = primitive.ObjectIDFromHex(req.CommentId); err != nil {
 		return resp, err
 	}
 
@@ -176,7 +176,7 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *platform.SetC
 				return err
 			}
 			if req.Attrs == int64(platform.Attrs_Pinned) || req.Attrs == int64(platform.Attrs_PinnedAndHighlighted) {
-				if _, err = s.SubjectMongoMapper.Update(sessionContext, &subjectMapper.Subject{ID: subjectId, TopCommentId: lo.ToPtr(req.Id)}); err != nil {
+				if _, err = s.SubjectMongoMapper.Update(sessionContext, &subjectMapper.Subject{ID: subjectId, TopCommentId: lo.ToPtr(req.CommentId)}); err != nil {
 					if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
 						log.CtxError(sessionContext, "设置评论属性失败[%v]: 回滚异常[%v]\n", err, rbErr)
 						return err
@@ -195,7 +195,7 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *platform.SetC
 			}
 			return nil
 		})
-	} else if res.TopCommentId == req.Id {
+	} else if res.TopCommentId == req.CommentId {
 		err = tx.UseSession(ctx, func(sessionContext mongo.SessionContext) error {
 			if err = sessionContext.StartTransaction(); err != nil {
 				return err
@@ -232,7 +232,7 @@ func (s *CommentService) SetCommentAttrs(ctx context.Context, req *platform.SetC
 			var subject *subjectMapper.Subject
 			switch {
 			case req.Attrs == int64(platform.Attrs_Pinned) || req.Attrs == int64(platform.Attrs_PinnedAndHighlighted):
-				subject = &subjectMapper.Subject{ID: subjectId, TopCommentId: lo.ToPtr(req.Id)}
+				subject = &subjectMapper.Subject{ID: subjectId, TopCommentId: lo.ToPtr(req.CommentId)}
 			default:
 				subject = &subjectMapper.Subject{ID: subjectId, TopCommentId: lo.ToPtr("")}
 			}

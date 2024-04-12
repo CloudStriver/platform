@@ -3,15 +3,18 @@ module github.com/CloudStriver/platform
 go 1.20
 
 require (
+	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240406130428-3a00c4159388
 	github.com/CloudStriver/go-pkg v0.0.0-20240206060942-84060a3dd273
-	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240411112733-f3978512a8b2
+	github.com/CloudStriver/service-idl-gen-go v0.0.0-20240412035535-b11df688dcda
 	github.com/bytedance/sonic v1.10.2
 	github.com/cloudwego/kitex v0.8.0
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
 	github.com/google/wire v0.5.0
 	github.com/kitex-contrib/obs-opentelemetry v0.2.5
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
 	github.com/samber/lo v1.39.0
+	github.com/zeromicro/go-queue v1.1.8
 	github.com/zeromicro/go-zero v1.6.1
 	go.mongodb.org/mongo-driver v1.13.1
 	go.opentelemetry.io/otel v1.19.0
@@ -21,12 +24,6 @@ require (
 
 //replace github.com/CloudStriver/service-idl-gen-go => ../service-idl-gen-go
 //replace github.com/CloudStriver/cloudmind-mq => ../cloudmind-mq
-
-require (
-	github.com/CloudStriver/cloudmind-mq v1.0.12-0.20240406130428-3a00c4159388
-	github.com/neo4j/neo4j-go-driver/v5 v5.19.0
-	github.com/zeromicro/go-queue v1.1.8
-)
 
 require (
 	github.com/apache/thrift v0.16.0 // indirect

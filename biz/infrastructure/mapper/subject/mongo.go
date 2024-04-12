@@ -107,7 +107,7 @@ func (m *MongoMapper) Update(ctx context.Context, data *Subject) (*mongo.UpdateR
 
 func (m *MongoMapper) UpdateCount(ctx context.Context, id string, allCount, rootCount int64) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
-	_, span := tracer.Start(ctx, "mongo.UpdateAfterCreateComment", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
+	_, span := tracer.Start(ctx, "mongo.UpdateCount", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
 	oid, _ := primitive.ObjectIDFromHex(id)
