@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/CloudStriver/go-pkg/utils/pagination"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
 	"github.com/CloudStriver/platform/biz/infrastructure/convertor"
 	commentMapper "github.com/CloudStriver/platform/biz/infrastructure/mapper/comment"
@@ -98,9 +99,10 @@ func (s *CommentService) GetCommentBlocks(ctx context.Context, req *platform.Get
 	resp = new(platform.GetCommentBlocksResp)
 
 	var (
-		total    int64
-		comments []*commentMapper.Comment
-		filter   *commentMapper.FilterOptions
+		total     int64
+		comments  []*commentMapper.Comment
+		replyList []*commentMapper.Comment
+		filter    *commentMapper.FilterOptions
 	)
 
 	p := convertor.ParsePagination(req.Pagination)
@@ -121,22 +123,21 @@ func (s *CommentService) GetCommentBlocks(ctx context.Context, req *platform.Get
 			}
 		})
 
-		for _, comment := range comments {
+		for i, comment := range comments {
+			p = &pagination.PaginationOptions{}
 			filter = &commentMapper.FilterOptions{OnlyFatherId: lo.ToPtr(comment.ID.Hex())}
-			if comments, total, err = s.CommentMongoMapper.FindManyAndCount(ctx, filter, p, sort.TimeCursorType); err != nil {
+			if replyList, total, err = s.CommentMongoMapper.FindManyAndCount(ctx, filter, p, sort.TimeCursorType); err != nil {
 				log.CtxError(ctx, "获取评论列表 失败[%v]\n", err)
 				return resp, err
 			}
 
-			for i := range resp.CommentBlocks {
-				if p.LastToken != nil {
-					resp.CommentBlocks[i].ReplyList.Token = *p.LastToken
-				}
-				resp.CommentBlocks[i].ReplyList.Total = total
-				resp.CommentBlocks[i].ReplyList.Comments = lo.Map(comments, func(comment *commentMapper.Comment, _ int) *platform.Comment {
-					return convertor.CommentMapperToComment(comment)
-				})
+			if p.LastToken != nil {
+				resp.CommentBlocks[i].ReplyList.Token = *p.LastToken
 			}
+			resp.CommentBlocks[i].ReplyList.Total = total
+			resp.CommentBlocks[i].ReplyList.Comments = lo.Map(replyList, func(comment *commentMapper.Comment, _ int) *platform.Comment {
+				return convertor.CommentMapperToComment(comment)
+			})
 		}
 	} else {
 		if comments, total, err = s.CommentMongoMapper.FindManyAndCount(ctx, filter, p, sort.TimeCursorType); err != nil {
