@@ -37,4 +37,5 @@ var MapperSet = wire.NewSet(
 	labelModel.NewMongoMapper,
 	labelModel.NewEsMapper,
 	relation.NewNeo4jMapper,
+	relation.NewMongoMapper,
 )
