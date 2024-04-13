@@ -106,8 +106,8 @@ func (s *CommentService) GetCommentBlocks(ctx context.Context, req *platform.Get
 	)
 
 	p := convertor.ParsePagination(req.Pagination)
-	filter = &commentMapper.FilterOptions{OnlyFatherId: lo.ToPtr(req.FatherId)}
-	if req.FatherId == req.SubjectId {
+	filter = &commentMapper.FilterOptions{OnlyRootId: lo.ToPtr(req.RootId)}
+	if req.RootId == req.SubjectId {
 		if comments, total, err = s.CommentMongoMapper.FindManyAndCount(ctx, filter, p, sort.TimeCursorType); err != nil {
 			log.CtxError(ctx, "获取评论列表 失败[%v]\n", err)
 			return resp, err
@@ -125,7 +125,7 @@ func (s *CommentService) GetCommentBlocks(ctx context.Context, req *platform.Get
 
 		for i, comment := range comments {
 			p = &pagination.PaginationOptions{}
-			filter = &commentMapper.FilterOptions{OnlyFatherId: lo.ToPtr(comment.ID.Hex())}
+			filter = &commentMapper.FilterOptions{OnlyRootId: lo.ToPtr(comment.ID.Hex())}
 			if replyList, total, err = s.CommentMongoMapper.FindManyAndCount(ctx, filter, p, sort.TimeCursorType); err != nil {
 				log.CtxError(ctx, "获取评论列表 失败[%v]\n", err)
 				return resp, err

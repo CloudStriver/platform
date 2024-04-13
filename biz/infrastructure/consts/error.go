@@ -11,4 +11,5 @@ var (
 	ErrDataBase              = status.Error(10007, "数据库异常")
 	ErrEsMapper              = status.Error(10008, "Es异常")
 	ErrIllegalOperation      = status.Error(10009, "非法操作")
+	ErrComponentNotStarted   = status.Error(10010, "该功能依赖的组件未启动")
 )

@@ -431,12 +431,16 @@ func (n *Neo4jMapper) DeleteEdge(ctx context.Context, relation *platform.Relatio
 }
 
 func NewNeo4jMapper(config *config.Config) RelationNeo4jMapper {
-	conn, err := neo4j.NewDriverWithContext(config.Neo4jConf.Url, neo4j.BasicAuth(config.Neo4jConf.Username, config.Neo4jConf.Password, ""))
-	if err != nil {
-		panic(err)
-	}
-	return &Neo4jMapper{
-		conn:     conn,
-		DataBase: config.Neo4jConf.DataBase,
+	if config.Neo4jConf.Enable {
+		conn, err := neo4j.NewDriverWithContext(config.Neo4jConf.Url, neo4j.BasicAuth(config.Neo4jConf.Username, config.Neo4jConf.Password, ""))
+		if err != nil {
+			panic(err)
+		}
+		return &Neo4jMapper{
+			conn:     conn,
+			DataBase: config.Neo4jConf.DataBase,
+		}
+	} else {
+		return &Neo4jMapper{}
 	}
 }

@@ -10,36 +10,36 @@ import (
 type FilterOptions struct {
 	OnlyUserId     *string
 	OnlyAtUserId   *string
-	OnlyFatherId   *string
+	OnlyRootId     *string
 	OnlyCommentIds []string
 	OnlyState      *int64
 	OnlyAttrs      *int64
 }
 
-type MongoIndexFilter struct {
-	bson.M
+type MongoFilter struct {
+	m bson.M
 	*FilterOptions
 }
 
 func makeMongoFilter(opts *FilterOptions) bson.M {
-	return (&MongoIndexFilter{
-		M:             bson.M{},
+	return (&MongoFilter{
+		m:             bson.M{},
 		FilterOptions: opts,
 	}).toBson()
 }
 
-func (f *MongoIndexFilter) toBson() bson.M {
+func (f *MongoFilter) toBson() bson.M {
 	f.CheckOnlyUserId()
 	f.CheckOnlyAtUserId()
-	f.CheckOnlyFatherId()
+	f.CheckOnlyRootId()
 	f.CheckOnlyState()
 	f.CheckOnlyAttrs()
-	return f.M
+	return f.m
 }
 
-func (f *MongoIndexFilter) CheckOnlyFileIds() {
+func (f *MongoFilter) CheckOnlyFileIds() {
 	if f.OnlyCommentIds != nil {
-		f.M[consts.ID] = bson.M{
+		f.m[consts.ID] = bson.M{
 			"$in": lo.Map[string, primitive.ObjectID](f.OnlyCommentIds, func(s string, _ int) primitive.ObjectID {
 				oid, _ := primitive.ObjectIDFromHex(s)
 				return oid
@@ -48,32 +48,32 @@ func (f *MongoIndexFilter) CheckOnlyFileIds() {
 	}
 }
 
-func (f *MongoIndexFilter) CheckOnlyUserId() {
+func (f *MongoFilter) CheckOnlyUserId() {
 	if f.OnlyUserId != nil {
-		f.M[consts.UserId] = *f.OnlyUserId
+		f.m[consts.UserId] = *f.OnlyUserId
 	}
 }
 
-func (f *MongoIndexFilter) CheckOnlyFatherId() {
-	if f.OnlyFatherId != nil {
-		f.M[consts.FatherId] = *f.OnlyFatherId
+func (f *MongoFilter) CheckOnlyRootId() {
+	if f.OnlyRootId != nil {
+		f.m[consts.FatherId] = *f.OnlyRootId
 	}
 }
 
-func (f *MongoIndexFilter) CheckOnlyAtUserId() {
+func (f *MongoFilter) CheckOnlyAtUserId() {
 	if f.OnlyAtUserId != nil {
-		f.M[consts.AtUserId] = *f.OnlyAtUserId
+		f.m[consts.AtUserId] = *f.OnlyAtUserId
 	}
 }
 
-func (f *MongoIndexFilter) CheckOnlyState() {
+func (f *MongoFilter) CheckOnlyState() {
 	if f.OnlyState != nil {
-		f.M[consts.State] = *f.OnlyState
+		f.m[consts.State] = *f.OnlyState
 	}
 }
 
-func (f *MongoIndexFilter) CheckOnlyAttrs() {
+func (f *MongoFilter) CheckOnlyAttrs() {
 	if f.OnlyAttrs != nil {
-		f.M[consts.Attrs] = *f.OnlyAttrs
+		f.m[consts.Attrs] = *f.OnlyAttrs
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/CloudStriver/platform/biz/infrastructure/consts"
 	"github.com/CloudStriver/platform/biz/infrastructure/mapper/comment"
 	"github.com/CloudStriver/platform/biz/infrastructure/mapper/label"
+	"github.com/CloudStriver/platform/biz/infrastructure/mapper/relation"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/basic"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -60,6 +61,17 @@ func LabelMapperToLabel(data *label.Label) *platform.Label {
 		LabelId:  data.ID.Hex(),
 		FatherId: data.FatherId,
 		Value:    data.Value,
+	}
+}
+
+func RelationMapperToRelation(data *relation.Relation) *platform.Relation {
+	return &platform.Relation{
+		FromId:       data.FromId,
+		FromType:     data.FromType,
+		ToId:         data.ToId,
+		ToType:       data.ToType,
+		RelationType: data.RelationType,
+		CreateTime:   data.CreateAt.UnixMilli(),
 	}
 }
 

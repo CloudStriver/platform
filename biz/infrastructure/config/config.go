@@ -38,6 +38,7 @@ type Config struct {
 		Username string
 		Password string
 		DataBase string
+		Enable   bool
 	}
 	DeleteCommentRelationKq KqConfig
 }
