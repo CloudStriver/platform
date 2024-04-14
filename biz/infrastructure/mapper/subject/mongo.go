@@ -33,6 +33,7 @@ type (
 
 	Subject struct {
 		ID           primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+		Type         int64              `bson:"type,omitempty" json:"type,omitempty"`
 		UserId       string             `bson:"userId,omitempty" json:"userId,omitempty"`
 		TopCommentId *string            `bson:"topCommentId,omitempty" json:"topCommentId,omitempty"`
 		RootCount    *int64             `bson:"rootCount,omitempty" json:"rootCount,omitempty"`

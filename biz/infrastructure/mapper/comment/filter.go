@@ -31,13 +31,14 @@ func makeMongoFilter(opts *FilterOptions) bson.M {
 func (f *MongoFilter) toBson() bson.M {
 	f.CheckOnlyUserId()
 	f.CheckOnlyAtUserId()
+	f.CheckOnlyCommentIds()
 	f.CheckOnlyRootId()
 	f.CheckOnlyState()
 	f.CheckOnlyAttrs()
 	return f.m
 }
 
-func (f *MongoFilter) CheckOnlyFileIds() {
+func (f *MongoFilter) CheckOnlyCommentIds() {
 	if f.OnlyCommentIds != nil {
 		f.m[consts.ID] = bson.M{
 			"$in": lo.Map[string, primitive.ObjectID](f.OnlyCommentIds, func(s string, _ int) primitive.ObjectID {

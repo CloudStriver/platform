@@ -82,7 +82,7 @@ func (c *PlatformServerImpl) CreateComment(ctx context.Context, req *platform.Cr
 					return err
 				}
 				// 二级评论 + 三级评论
-				c.CommentService.UpdateCount(ctx, req.RootId, getRootComment.Count-1)
+				c.CommentService.UpdateCount(ctx, req.RootId, getRootComment.Count+1)
 			}
 		}
 		return nil
@@ -124,14 +124,14 @@ func (c *PlatformServerImpl) DeleteComment(ctx context.Context, req *platform.De
 	if getCommentResp.RootId == getCommentResp.SubjectId {
 		// 一级评论
 		if getCommentResp.FatherId == getCommentResp.SubjectId {
-			if res, err = c.CommentService.DeleteComment(ctx, req.CommentId, true); err != nil {
+			if res, err = c.CommentService.DeleteComment(ctx, req.CommentId, getCommentResp.Type, true); err != nil {
 				return res, err
 			}
 		}
 	} else {
 		// 二级评论 + 三级评论
 		if getCommentResp.FatherId != getCommentResp.SubjectId {
-			if res, err = c.CommentService.DeleteComment(ctx, req.CommentId, false); err != nil {
+			if res, err = c.CommentService.DeleteComment(ctx, req.CommentId, getCommentResp.Type, false); err != nil {
 				return res, err
 			}
 		}

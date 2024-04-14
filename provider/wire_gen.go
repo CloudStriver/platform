@@ -27,9 +27,11 @@ func NewPlatformServerImpl() (*adaptor.PlatformServerImpl, error) {
 	}
 	iMongoMapper := comment.NewMongoMapper(configConfig)
 	subjectIMongoMapper := subject.NewMongoMapper(configConfig)
+	deleteCommentRelationKq := kq.NewDeleteCommentRelationKq(configConfig)
 	commentService := &service.CommentService{
-		CommentMongoMapper: iMongoMapper,
-		SubjectMongoMapper: subjectIMongoMapper,
+		CommentMongoMapper:      iMongoMapper,
+		SubjectMongoMapper:      subjectIMongoMapper,
+		DeleteCommentRelationKq: deleteCommentRelationKq,
 	}
 	iEsMapper := label.NewEsMapper(configConfig)
 	labelIMongoMapper := label.NewMongoMapper(configConfig)
@@ -37,10 +39,9 @@ func NewPlatformServerImpl() (*adaptor.PlatformServerImpl, error) {
 		LabelEsMapper:    iEsMapper,
 		LabelMongoMapper: labelIMongoMapper,
 	}
-	deleteCommentRelationKq := kq.NewDeleteCommentRelationKq(configConfig)
 	subjectService := &service.SubjectService{
-		SubjectMongoMapper:   subjectIMongoMapper,
-		DeleteFileRelationKq: deleteCommentRelationKq,
+		SubjectMongoMapper:      subjectIMongoMapper,
+		DeleteSubjectRelationKq: deleteCommentRelationKq,
 	}
 	redisRedis := redis.NewRedis(configConfig)
 	relationNeo4jMapper := relation.NewNeo4jMapper(configConfig)

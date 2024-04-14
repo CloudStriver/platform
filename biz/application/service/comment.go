@@ -2,15 +2,21 @@ package service
 
 import (
 	"context"
+	"github.com/CloudStriver/cloudmind-mq/app/util/message"
 	"github.com/CloudStriver/go-pkg/utils/pagination"
+	"github.com/CloudStriver/go-pkg/utils/pconvertor"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
+	"github.com/CloudStriver/platform/biz/infrastructure/consts"
 	"github.com/CloudStriver/platform/biz/infrastructure/convertor"
+	"github.com/CloudStriver/platform/biz/infrastructure/kq"
 	commentMapper "github.com/CloudStriver/platform/biz/infrastructure/mapper/comment"
 	subjectMapper "github.com/CloudStriver/platform/biz/infrastructure/mapper/subject"
 	"github.com/CloudStriver/platform/biz/infrastructure/sort"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
+	"github.com/bytedance/sonic"
 	"github.com/google/wire"
 	"github.com/samber/lo"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"math"
@@ -23,14 +29,15 @@ type ICommentService interface {
 	GetCommentBlocks(ctx context.Context, req *platform.GetCommentBlocksReq) (resp *platform.GetCommentBlocksResp, err error)
 	CreateComment(ctx context.Context, req *platform.CreateCommentReq) (resp *platform.CreateCommentResp, err error)
 	UpdateComment(ctx context.Context, req *platform.UpdateCommentReq) (resp *platform.UpdateCommentResp, err error)
-	DeleteComment(ctx context.Context, commentId string, level bool) (resp *platform.DeleteCommentResp, err error)
+	DeleteComment(ctx context.Context, commentId string, commentType int64, level bool) (resp *platform.DeleteCommentResp, err error)
 	DeleteCommentByIds(ctx context.Context, req *platform.DeleteCommentByIdsReq) (resp *platform.DeleteCommentByIdsResp, err error)
 	SetCommentAttrs(ctx context.Context, req *platform.SetCommentAttrsReq, res *platform.GetCommentSubjectResp) (resp *platform.SetCommentAttrsResp, err error)
 }
 
 type CommentService struct {
-	CommentMongoMapper commentMapper.IMongoMapper
-	SubjectMongoMapper subjectMapper.IMongoMapper
+	CommentMongoMapper      commentMapper.IMongoMapper
+	SubjectMongoMapper      subjectMapper.IMongoMapper
+	DeleteCommentRelationKq *kq.DeleteCommentRelationKq
 }
 
 var CommentSet = wire.NewSet(
@@ -67,6 +74,7 @@ func (s *CommentService) GetComment(ctx context.Context, req *platform.GetCommen
 		AtUserId:   data.AtUserId,
 		Content:    data.Content,
 		Meta:       data.Meta,
+		Type:       data.Type,
 		CreateTime: data.CreateAt.UnixMilli(),
 	}
 	return resp, nil
@@ -174,6 +182,7 @@ func (s *CommentService) CreateComment(ctx context.Context, req *platform.Create
 		Count:     lo.ToPtr(int64(0)),
 		State:     int64(platform.State_Normal),
 		Attrs:     int64(platform.Attrs_None),
+		Type:      req.Type,
 	}); err != nil {
 		log.CtxError(ctx, "创建评论 失败[%v]\n", err)
 		return resp, err
@@ -203,9 +212,61 @@ func (s *CommentService) UpdateComment(ctx context.Context, req *platform.Update
 	return resp, nil
 }
 
-func (s *CommentService) DeleteComment(ctx context.Context, commentId string, level bool) (resp *platform.DeleteCommentResp, err error) {
+func (s *CommentService) DeleteComment(ctx context.Context, commentId string, commentType int64, level bool) (resp *platform.DeleteCommentResp, err error) {
 	resp = new(platform.DeleteCommentResp)
+
 	if level {
+		var (
+			ids      []string
+			comments []*commentMapper.Comment
+		)
+		if err = s.CommentMongoMapper.GetConn().Find(ctx, &comments, bson.M{consts.RootId: commentId}); err != nil {
+			return resp, err
+		}
+
+		ids = lo.Map(comments, func(comment *commentMapper.Comment, _ int) string {
+			return comment.ID.Hex()
+		})
+
+		tx := s.CommentMongoMapper.StartClient()
+		if err = tx.UseSession(ctx, func(sessionContext mongo.SessionContext) error {
+			var err1 error
+			if err1 = sessionContext.StartTransaction(); err1 != nil {
+				return err1
+			}
+			if _, err1 = s.CommentMongoMapper.Delete(sessionContext, commentId); err1 != nil {
+				if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
+					log.CtxError(sessionContext, "删除评论： 产生错误[%v]: 回滚异常[%v]\n", err1, rbErr)
+				}
+				return err1
+			}
+
+			if _, err1 = s.CommentMongoMapper.DeleteMany(sessionContext, ids); err1 != nil {
+				if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
+					log.CtxError(sessionContext, "删除子评论 产生错误[%v]: 回滚异常[%v]\n", err1, rbErr)
+				}
+				return err1
+			}
+
+			if err1 = sessionContext.CommitTransaction(sessionContext); err1 != nil {
+				log.CtxError(sessionContext, "删除评论: 提交事务异常[%v]\n", err1)
+				return err1
+			}
+
+			return nil
+		}); err != nil {
+			return resp, err
+		}
+
+		for _, v := range comments {
+			data, _ := sonic.Marshal(&message.DeleteCommentRelationsMessage{
+				FromType: v.Type,
+				FromId:   v.ID.Hex(),
+			})
+			if err2 := s.DeleteCommentRelationKq.Push(pconvertor.Bytes2String(data)); err2 != nil {
+				return resp, err2
+			}
+		}
 
 	} else {
 		if _, err = s.CommentMongoMapper.Delete(ctx, commentId); err != nil {
@@ -213,6 +274,15 @@ func (s *CommentService) DeleteComment(ctx context.Context, commentId string, le
 			return resp, err
 		}
 	}
+
+	data, _ := sonic.Marshal(&message.DeleteCommentRelationsMessage{
+		FromType: commentType,
+		FromId:   commentId,
+	})
+	if err2 := s.DeleteCommentRelationKq.Push(pconvertor.Bytes2String(data)); err2 != nil {
+		return resp, err2
+	}
+
 	return resp, nil
 }
 

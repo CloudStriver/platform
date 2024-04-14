@@ -25,6 +25,7 @@ func CommentMapperToComment(data *comment.Comment) *platform.Comment {
 		AtUserId:   data.AtUserId,
 		Content:    data.Content,
 		Meta:       data.Meta,
+		Type:       data.Type,
 		CreateTime: data.CreateAt.UnixMilli(),
 	}
 }
