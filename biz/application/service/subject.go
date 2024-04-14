@@ -5,7 +5,6 @@ import (
 	"github.com/CloudStriver/cloudmind-mq/app/util/message"
 	"github.com/CloudStriver/go-pkg/utils/pconvertor"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
-	"github.com/CloudStriver/platform/biz/infrastructure/consts"
 	"github.com/CloudStriver/platform/biz/infrastructure/kq"
 	subjectMapper "github.com/CloudStriver/platform/biz/infrastructure/mapper/subject"
 	gencontent "github.com/CloudStriver/service-idl-gen-go/kitex_gen/cloudmind/content"
@@ -17,7 +16,7 @@ import (
 )
 
 type ISubjectService interface {
-	UpdateCount(ctx context.Context, rootId, subjectId, fatherId string, count int64)
+	UpdateCount(ctx context.Context, subjectId string, rootCount, allCount int64)
 	GetCommentSubject(ctx context.Context, req *platform.GetCommentSubjectReq) (resp *platform.GetCommentSubjectResp, err error)
 	CreateCommentSubject(ctx context.Context, req *platform.CreateCommentSubjectReq) (resp *platform.CreateCommentSubjectResp, err error)
 	UpdateCommentSubject(ctx context.Context, req *platform.UpdateCommentSubjectReq) (resp *platform.UpdateCommentSubjectResp, err error)
@@ -74,18 +73,8 @@ func (s *SubjectService) CreateCommentSubject(ctx context.Context, req *platform
 	return resp, nil
 }
 
-func (s *SubjectService) UpdateCount(ctx context.Context, rootId, subjectId, fatherId string, count int64) {
-	if rootId == subjectId {
-		// 一级评论
-		if fatherId == subjectId {
-			s.SubjectMongoMapper.UpdateCount(ctx, subjectId, count, count)
-		}
-	} else {
-		// 二级评论 + 三级评论
-		if fatherId != subjectId {
-			s.SubjectMongoMapper.UpdateCount(ctx, subjectId, count, consts.InitNumber)
-		}
-	}
+func (s *SubjectService) UpdateCount(ctx context.Context, subjectId string, rootCount, allCount int64) {
+	s.SubjectMongoMapper.UpdateCount(ctx, subjectId, rootCount, allCount)
 }
 
 func (s *SubjectService) UpdateCommentSubject(ctx context.Context, req *platform.UpdateCommentSubjectReq) (resp *platform.UpdateCommentSubjectResp, err error) {

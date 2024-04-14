@@ -17,13 +17,13 @@ import (
 )
 
 type ICommentService interface {
-	UpdateCount(ctx context.Context, rootId, subjectId, fatherId string, count int64)
+	UpdateCount(ctx context.Context, rootId string, count int64)
 	GetComment(ctx context.Context, req *platform.GetCommentReq) (resp *platform.GetCommentResp, err error)
 	GetCommentList(ctx context.Context, req *platform.GetCommentListReq) (resp *platform.GetCommentListResp, err error)
 	GetCommentBlocks(ctx context.Context, req *platform.GetCommentBlocksReq) (resp *platform.GetCommentBlocksResp, err error)
 	CreateComment(ctx context.Context, req *platform.CreateCommentReq) (resp *platform.CreateCommentResp, err error)
 	UpdateComment(ctx context.Context, req *platform.UpdateCommentReq) (resp *platform.UpdateCommentResp, err error)
-	DeleteComment(ctx context.Context, req *platform.DeleteCommentReq) (resp *platform.DeleteCommentResp, err error)
+	DeleteComment(ctx context.Context, commentId string, level bool) (resp *platform.DeleteCommentResp, err error)
 	DeleteCommentByIds(ctx context.Context, req *platform.DeleteCommentByIdsReq) (resp *platform.DeleteCommentByIdsResp, err error)
 	SetCommentAttrs(ctx context.Context, req *platform.SetCommentAttrsReq, res *platform.GetCommentSubjectResp) (resp *platform.SetCommentAttrsResp, err error)
 }
@@ -181,13 +181,8 @@ func (s *CommentService) CreateComment(ctx context.Context, req *platform.Create
 	return resp, nil
 }
 
-func (s *CommentService) UpdateCount(ctx context.Context, rootId, subjectId, fatherId string, count int64) {
-	if rootId != subjectId {
-		if fatherId != subjectId {
-			// 二级评论 + 三级评论
-			s.CommentMongoMapper.UpdateCount(ctx, rootId, count)
-		}
-	}
+func (s *CommentService) UpdateCount(ctx context.Context, rootId string, count int64) {
+	s.CommentMongoMapper.UpdateCount(ctx, rootId, count)
 }
 
 func (s *CommentService) UpdateComment(ctx context.Context, req *platform.UpdateCommentReq) (resp *platform.UpdateCommentResp, err error) {
@@ -208,11 +203,15 @@ func (s *CommentService) UpdateComment(ctx context.Context, req *platform.Update
 	return resp, nil
 }
 
-func (s *CommentService) DeleteComment(ctx context.Context, req *platform.DeleteCommentReq) (resp *platform.DeleteCommentResp, err error) {
+func (s *CommentService) DeleteComment(ctx context.Context, commentId string, level bool) (resp *platform.DeleteCommentResp, err error) {
 	resp = new(platform.DeleteCommentResp)
-	if _, err = s.CommentMongoMapper.Delete(ctx, req.CommentId); err != nil {
-		log.CtxError(ctx, "删除评论 失败[%v]\n", err)
-		return resp, err
+	if level {
+
+	} else {
+		if _, err = s.CommentMongoMapper.Delete(ctx, commentId); err != nil {
+			log.CtxError(ctx, "删除评论 失败[%v]\n", err)
+			return resp, err
+		}
 	}
 	return resp, nil
 }

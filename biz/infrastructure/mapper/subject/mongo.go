@@ -25,7 +25,7 @@ type (
 		Insert(ctx context.Context, data *Subject) (string, error)
 		FindOne(ctx context.Context, id string) (*Subject, error)
 		Update(ctx context.Context, data *Subject) (*mongo.UpdateResult, error)
-		UpdateCount(ctx context.Context, id string, allCount, rootCount int64)
+		UpdateCount(ctx context.Context, id string, rootCount, allCount int64)
 		Delete(ctx context.Context, id string) (int64, error)
 		GetConn() *monc.Model
 		StartClient() *mongo.Client
@@ -105,14 +105,14 @@ func (m *MongoMapper) Update(ctx context.Context, data *Subject) (*mongo.UpdateR
 	return res, err
 }
 
-func (m *MongoMapper) UpdateCount(ctx context.Context, id string, allCount, rootCount int64) {
+func (m *MongoMapper) UpdateCount(ctx context.Context, id string, rootCount, allCount int64) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "mongo.UpdateCount", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
 
 	oid, _ := primitive.ObjectIDFromHex(id)
 	key := prefixSubjectCacheKey + id
-	_, _ = m.conn.UpdateOne(ctx, key, bson.M{consts.ID: oid}, bson.M{"$inc": bson.M{consts.RootCount: rootCount, consts.AllCount: allCount}, "$set": bson.M{consts.UpdateAt: time.Now()}})
+	_, _ = m.conn.UpdateOne(ctx, key, bson.M{consts.ID: oid}, bson.M{"$set": bson.M{consts.RootCount: rootCount, consts.AllCount: allCount, consts.UpdateAt: time.Now()}})
 }
 
 func (m *MongoMapper) Delete(ctx context.Context, id string) (int64, error) {
