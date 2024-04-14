@@ -23,10 +23,10 @@ const (
 	Zone         = "zone"
 	SubZone      = "subZone"
 	Name         = "name"
-	ToId         = "ToId"
-	ToType       = "ToType"
-	FromId       = "FromId"
-	FromType     = "FromType"
+	ToId         = "toId"
+	ToType       = "toType"
+	FromId       = "fromId"
+	FromType     = "fromType"
 	RelationType = "relationType"
 )
 
