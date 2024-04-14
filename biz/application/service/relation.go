@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/CloudStriver/go-pkg/utils/pagination"
 	"github.com/CloudStriver/go-pkg/utils/pconvertor"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
@@ -235,7 +237,7 @@ func (s *RelationServiceImpl) CreateRelation(ctx context.Context, req *platform.
 	}); err != nil {
 		return resp, err
 	}
-
+	fmt.Println(res.Ok)
 	if !res.Ok {
 		if _, err = s.RelationMongoMapper.Insert(ctx, &relationmapper.Relation{
 			ID:           primitive.NilObjectID,
@@ -274,10 +276,10 @@ func (s *RelationServiceImpl) GetRelation(ctx context.Context, req *platform.Get
 		OnlyToType:       lo.ToPtr(req.ToType),
 		OnlyToId:         lo.ToPtr(req.ToId),
 		OnlyRelationType: lo.ToPtr(req.RelationType),
-	}); err != nil {
+	}); err != nil && !errors.Is(err, consts.ErrNotFound) {
 		return resp, err
 	}
-
+	fmt.Println(err, relation)
 	if relation != nil {
 		resp.Ok = true
 	}

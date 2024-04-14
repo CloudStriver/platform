@@ -44,10 +44,12 @@ func NewPlatformServerImpl() (*adaptor.PlatformServerImpl, error) {
 	}
 	redisRedis := redis.NewRedis(configConfig)
 	relationNeo4jMapper := relation.NewNeo4jMapper(configConfig)
+	relationIMongoMapper := relation.NewMongoMapper(configConfig)
 	relationServiceImpl := &service.RelationServiceImpl{
-		Config:        configConfig,
-		Redis:         redisRedis,
-		RelationModel: relationNeo4jMapper,
+		Config:              configConfig,
+		Redis:               redisRedis,
+		RelationModel:       relationNeo4jMapper,
+		RelationMongoMapper: relationIMongoMapper,
 	}
 	platformServerImpl := &adaptor.PlatformServerImpl{
 		Config:          configConfig,

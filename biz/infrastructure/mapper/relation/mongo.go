@@ -3,6 +3,7 @@ package relation
 import (
 	"context"
 	errorx "errors"
+	"fmt"
 	"github.com/CloudStriver/go-pkg/utils/pagination"
 	"github.com/CloudStriver/go-pkg/utils/pagination/mongop"
 	"github.com/CloudStriver/platform/biz/infrastructure/config"
@@ -82,6 +83,7 @@ func (m *MongoMapper) FindOne(ctx context.Context, fopts *FilterOptions) (*Relat
 
 	var data Relation
 	filter := makeMongoFilter(fopts)
+	fmt.Println(filter)
 	err := m.conn.FindOneNoCache(ctx, &data, filter)
 	switch {
 	case errorx.Is(err, monc.ErrNotFound):
