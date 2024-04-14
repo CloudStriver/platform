@@ -56,7 +56,7 @@ func (f *MongoFilter) CheckOnlyUserId() {
 
 func (f *MongoFilter) CheckOnlyRootId() {
 	if f.OnlyRootId != nil {
-		f.m[consts.FatherId] = *f.OnlyRootId
+		f.m[consts.RootId] = *f.OnlyRootId
 	}
 }
 
