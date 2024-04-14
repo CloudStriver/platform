@@ -43,6 +43,7 @@ type (
 
 	Comment struct {
 		ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+		Type      int64              `bson:"type,omitempty" json:"type,omitempty"`
 		UserId    string             `bson:"userId,omitempty" json:"userId,omitempty"`
 		AtUserId  string             `bson:"atUserId,omitempty" json:"atUserId,omitempty"`
 		SubjectId string             `bson:"subjectId,omitempty" json:"subjectId,omitempty"`
@@ -128,7 +129,7 @@ func (m *MongoMapper) UpdateCount(ctx context.Context, id string, count int64) {
 
 	oid, _ := primitive.ObjectIDFromHex(id)
 	key := prefixCommentCacheKey + id
-	_, _ = m.conn.UpdateOne(ctx, key, bson.M{consts.ID: oid}, bson.M{"$inc": bson.M{consts.Count: count}})
+	_, _ = m.conn.UpdateOne(ctx, key, bson.M{consts.ID: oid}, bson.M{"$set": bson.M{consts.Count: lo.ToPtr(count)}})
 }
 
 func (m *MongoMapper) Delete(ctx context.Context, id string) (int64, error) {

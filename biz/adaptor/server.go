@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/CloudStriver/platform/biz/application/service"
 	"github.com/CloudStriver/platform/biz/infrastructure/config"
-	"github.com/CloudStriver/platform/biz/infrastructure/consts"
 	"github.com/CloudStriver/service-idl-gen-go/kitex_gen/platform"
 	"github.com/zeromicro/go-zero/core/mr"
 )
@@ -69,11 +68,36 @@ func (c *PlatformServerImpl) CreateComment(ctx context.Context, req *platform.Cr
 	if res, err = c.CommentService.CreateComment(ctx, req); err != nil {
 		return res, err
 	}
+
+	var getSubjectResp *platform.GetCommentSubjectResp
+	if getSubjectResp, err = c.SubjectService.GetCommentSubject(ctx, &platform.GetCommentSubjectReq{SubjectId: req.SubjectId}); err != nil {
+		return res, err
+	}
+
 	_ = mr.Finish(func() error {
-		c.CommentService.UpdateCount(ctx, req.RootId, req.SubjectId, req.FatherId, consts.Increment)
+		if req.RootId != req.SubjectId {
+			if req.FatherId != req.SubjectId {
+				var getRootComment *platform.GetCommentResp
+				if getRootComment, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{CommentId: req.RootId}); err != nil {
+					return err
+				}
+				// 二级评论 + 三级评论
+				c.CommentService.UpdateCount(ctx, req.RootId, getRootComment.Count+1)
+			}
+		}
 		return nil
 	}, func() error {
-		c.SubjectService.UpdateCount(ctx, req.RootId, req.SubjectId, req.FatherId, consts.Increment)
+		if req.RootId == req.SubjectId {
+			// 一级评论
+			if req.FatherId == req.SubjectId {
+				c.SubjectService.UpdateCount(ctx, req.SubjectId, getSubjectResp.RootCount+1, getSubjectResp.AllCount+1)
+			}
+		} else {
+			// 二级评论 + 三级评论
+			if req.FatherId != req.SubjectId {
+				c.SubjectService.UpdateCount(ctx, req.SubjectId, getSubjectResp.RootCount, getSubjectResp.AllCount+1)
+			}
+		}
 		return nil
 	})
 	return res, nil
@@ -84,18 +108,59 @@ func (c *PlatformServerImpl) UpdateComment(ctx context.Context, req *platform.Up
 }
 
 func (c *PlatformServerImpl) DeleteComment(ctx context.Context, req *platform.DeleteCommentReq) (res *platform.DeleteCommentResp, err error) {
-	var data *platform.GetCommentResp
-	if data, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{CommentId: req.CommentId}); err != nil {
+	var (
+		getCommentResp *platform.GetCommentResp
+		getSubjectResp *platform.GetCommentSubjectResp
+	)
+
+	if getCommentResp, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{CommentId: req.CommentId}); err != nil {
 		return res, err
 	}
-	if res, err = c.CommentService.DeleteComment(ctx, req); err != nil {
+
+	if getSubjectResp, err = c.SubjectService.GetCommentSubject(ctx, &platform.GetCommentSubjectReq{SubjectId: getCommentResp.SubjectId}); err != nil {
 		return res, err
 	}
+
+	if getCommentResp.RootId == getCommentResp.SubjectId {
+		// 一级评论
+		if getCommentResp.FatherId == getCommentResp.SubjectId {
+			if res, err = c.CommentService.DeleteComment(ctx, req.CommentId, getCommentResp.Type, true); err != nil {
+				return res, err
+			}
+		}
+	} else {
+		// 二级评论 + 三级评论
+		if getCommentResp.FatherId != getCommentResp.SubjectId {
+			if res, err = c.CommentService.DeleteComment(ctx, req.CommentId, getCommentResp.Type, false); err != nil {
+				return res, err
+			}
+		}
+	}
+
 	_ = mr.Finish(func() error {
-		c.CommentService.UpdateCount(ctx, data.RootId, data.SubjectId, data.FatherId, consts.Decrement)
+		if getCommentResp.RootId != getCommentResp.SubjectId {
+			if getCommentResp.FatherId != getCommentResp.SubjectId {
+				var getRootComment *platform.GetCommentResp
+				if getRootComment, err = c.CommentService.GetComment(ctx, &platform.GetCommentReq{CommentId: getCommentResp.RootId}); err != nil {
+					return err
+				}
+				// 二级评论 + 三级评论
+				c.CommentService.UpdateCount(ctx, getCommentResp.RootId, getRootComment.Count-1)
+			}
+		}
 		return nil
 	}, func() error {
-		c.SubjectService.UpdateCount(ctx, data.RootId, data.SubjectId, data.FatherId, consts.Decrement)
+		if getCommentResp.RootId == getCommentResp.SubjectId {
+			// 一级评论
+			if getCommentResp.FatherId == getCommentResp.SubjectId {
+				c.SubjectService.UpdateCount(ctx, getCommentResp.SubjectId, getSubjectResp.RootCount-1, getSubjectResp.AllCount-getCommentResp.Count-1)
+			}
+		} else {
+			// 二级评论 + 三级评论
+			if getCommentResp.FatherId != getCommentResp.SubjectId {
+				c.SubjectService.UpdateCount(ctx, getCommentResp.SubjectId, getSubjectResp.RootCount, getSubjectResp.AllCount-1)
+			}
+		}
 		return nil
 	})
 	return res, nil

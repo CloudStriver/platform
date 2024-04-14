@@ -71,7 +71,7 @@ func (s *RelationServiceImpl) DeleteNode(ctx context.Context, req *platform.Dele
 			OnlyFromId:   lo.ToPtr(req.NodeId),
 		}); err1 != nil {
 			if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
-				log.CtxError(sessionContext, "保存文件中产生错误[%v]: 回滚异常[%v]\n", err1, rbErr)
+				log.CtxError(sessionContext, "删除关系节点：产生错误[%v]: 回滚异常[%v]\n", err1, rbErr)
 			}
 			return err1
 		}
@@ -81,13 +81,13 @@ func (s *RelationServiceImpl) DeleteNode(ctx context.Context, req *platform.Dele
 			OnlyToId:   lo.ToPtr(req.NodeId),
 		}); err1 != nil {
 			if rbErr := sessionContext.AbortTransaction(sessionContext); rbErr != nil {
-				log.CtxError(sessionContext, "保存文件中产生错误[%v]: 回滚异常[%v]\n", err1, rbErr)
+				log.CtxError(sessionContext, "删除关系节点：产生错误[%v]: 回滚异常[%v]\n", err1, rbErr)
 			}
 			return err1
 		}
 
 		if err1 = sessionContext.CommitTransaction(sessionContext); err1 != nil {
-			log.CtxError(sessionContext, "保存文件: 提交事务异常[%v]\n", err1)
+			log.CtxError(sessionContext, "删除关系节点: 提交事务异常[%v]\n", err1)
 			return err1
 		}
 		return nil
