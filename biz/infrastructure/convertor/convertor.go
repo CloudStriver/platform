@@ -35,10 +35,11 @@ func CommentFilterOptionsToFilterOptions(data *platform.CommentFilterOptions) *c
 		return &comment.FilterOptions{}
 	} else {
 		return &comment.FilterOptions{
-			OnlyUserId:   data.OnlyUserId,
-			OnlyAtUserId: data.OnlyAtUserId,
-			OnlyState:    data.OnlyState,
-			OnlyAttrs:    data.OnlyAttrs,
+			OnlyUserId:     data.OnlyUserId,
+			OnlyAtUserId:   data.OnlyAtUserId,
+			OnlyCommentIds: data.OnlyCommentIds,
+			OnlyState:      data.OnlyState,
+			OnlyAttrs:      data.OnlyAttrs,
 		}
 	}
 }
