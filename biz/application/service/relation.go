@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CloudStriver/go-pkg/utils/pagination"
+	"github.com/CloudStriver/go-pkg/utils/pagination/mongop"
 	"github.com/CloudStriver/go-pkg/utils/pconvertor"
 	"github.com/CloudStriver/go-pkg/utils/util/log"
 	"github.com/CloudStriver/platform/biz/infrastructure/config"
@@ -161,7 +162,7 @@ func (s *RelationServiceImpl) GetRelations(ctx context.Context, req *platform.Ge
 			OnlyFromId:       lo.ToPtr(o.FromFilterOptions.FromId),
 			OnlyToType:       lo.ToPtr(o.FromFilterOptions.ToType),
 			OnlyRelationType: lo.ToPtr(req.RelationType),
-		}, p, sort.TimeCursorType); err != nil {
+		}, p, mongop.IdCursorType); err != nil {
 			return resp, err
 		}
 
@@ -178,7 +179,7 @@ func (s *RelationServiceImpl) GetRelations(ctx context.Context, req *platform.Ge
 			OnlyToId:         lo.ToPtr(o.ToFilterOptions.ToId),
 			OnlyToType:       lo.ToPtr(o.ToFilterOptions.ToType),
 			OnlyRelationType: lo.ToPtr(req.RelationType),
-		}, p, sort.TimeCursorType); err != nil {
+		}, p, mongop.IdCursorType); err != nil {
 			return resp, err
 		}
 
