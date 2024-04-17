@@ -43,7 +43,7 @@ func (n *Neo4jMapper) GetRelationPathsCount(ctx context.Context, fromType1 int64
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "neo4j.GetRelationPathsCount", oteltrace.WithSpanKind(oteltrace.SpanKindConsumer))
 	defer span.End()
-	result, err := neo4j.ExecuteQuery(ctx, n.conn, "MATCH path=(node1:node {name: $FromId1, type: $FromType1})-[r1:edge {type: $Type1}]->(node3:node{type: $ToType})<-[r2:edge {type: $Type2}]-(node2:node{name: $FromId2, type: $FromType2}) RETURN COUNT(*) as patternCount",
+	result, err := neo4j.ExecuteQuery(ctx, n.conn, "MATCH path=(node1:node {name: $FromId1, type: $FromType1})->[r1:edge {type: $Type1}]->(node3:node{type: $ToType})<-[r2:edge {type: $Type2}]-(node2:node{type: $FromType2}) RETURN COUNT(*) as patternCount",
 		map[string]any{
 			"FromId1":   fromId1,
 			"FromType1": fromType1,
